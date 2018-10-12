@@ -3,6 +3,7 @@
 
 (defvar *wat-macro-tag* 'wat-macro)
 
+
 (defmacro @ (name args &rest body)
   `(defmacro ,name ,(append args '(&rest body))
        (backquote (cons (quote ,*wat-macro-tag*)
@@ -14,7 +15,6 @@
 	   	   
 (@ define-register (name initial-value)
   (global ,name (mut i32) (i32.const ,initial-value)))
-
 
 (@ op-reg (reg value op)
   (set_global ,reg (,op (get_global ,reg) ,value)))
@@ -38,7 +38,7 @@
    (reg.load $W $IP) ;; W <- (IP)
    (reg.add $IP CELL) ;; IP <- IP + 4
    (reg.lpush $W)
-p   (call_indirect)    ;; JMP (W)
+   (call_indirect)    ;; JMP (W)
    )
 
 ;;(define-word $ENTER

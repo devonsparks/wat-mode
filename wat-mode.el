@@ -1,4 +1,4 @@
-(require 'comint) 
+
 
 (defconst *wat-comment-token* ";;"
   "wat comment token - used for annotating macro expansions.")
@@ -9,68 +9,134 @@
 (defconst *wat-macro-tag-sep* ":"
   "Separator character for macro expansion tags")
 
-(defalias 'wat-printer 'pp
+(defalias 'wat-fmt 'pp
   "Procedure used to format expressions during macro expansion.")
 
-(defun wat-macro-tag (name)
-  "Built a symbol tag of wat macro NAME in the current buffer"
-  (intern (mapconcat 'identity
-		     (list (symbol-name *wat-macro-tag*)
-			   (symbol-name name))
-		     *wat-macro-tag-sep*)))
+
+(defun eval-and-replace (&optional forward)
+  "Replace an sexp with its value. If FORWARD is non-nil,
+   kill the sexp following point. Otherwise, kill preceeding sexp."
+  (interactive)
+  (if forward
+      (kill-sexp 1)
+      (backward-kill-sexp))
+  (condition-case nil
+      (wat-fmt (eval (read (current-kill 0)))
+             (current-buffer))
+    (error (message "Invalid expression")
+           (insert (current-kill 0)))))
 
 
-(defmacro wat-macro (name args &rest body)
+(defun wat-expand-in-place (&optional forward)
+  "Replace an sexp with its value. "
+  (interactive)
+  (if forward
+      (kill-sexp 1)
+      (backward-kill-sexp))
+  (condition-case nil
+      (let ((exp (read (current-kill 0))))
+	(wat-fmt (macroexpand-all exp)
+		 (current-buffer)))
+      ('error (message "Invalid expression")
+	     (insert (current-kill 0)))))
+
+(defun wat-buffer-output-name (buffer-name)
+  (concat buffer-name ".1"))
+
+(defun wat-compile-module (&optional forward)
+  (let ((buffer (get-buffer-create
+		 (wat-buffer-output-name (buffer-name)))))
+    (intern *wat-macro-tag*)
+    (fset *wat-macro-tag* (lambda (name body) body))
+    (with-current-buffer buffer
+      (eval-and-replace forward))
+    (unintern *wat-macro-tag*)))
+	
+(global-set-key (kbd "C-c e") 'eval-and-replace)
+(global-set-key (kbd "C-c k") 'wat-expand-in-place)
+
+     
+(defmacro define-wat-macro (name args &rest body)
     "Extends wat syntax with simple macro expansions."    
-    (let ((tag (wat-macro-tag name)))
-      `(defmacro ,name ,(append args '(&rest body))
-	   (cons (quote ,tag)
-		 (backquote ,body)))))
+    (let ((tag 'wat-macro)
+	  (name-string (symbol-name name)))
+      `(defmacro ,name ,(append args '(&rest body))       
+	   (backquote (,tag ,name-string ,@body)))))
+		 
 
-
-(defun wat-macro-sanitize-1 ()
-  "Replaces the next wat macro tag occurrence in the 
-   current buffer at point with its commented equivalent.
-
-   Returns: t if expansion succeeded; null otherwise."
-    (goto-char (search-forward (symbol-name *wat-macro-tag*)))
-    (goto-char (search-backward "("))
-    (save-excursion
-      (delete-char 1)
-      (insert *wat-comment-token*)
-      (goto-char (forward-list))
-      (delete-char -1))
-    (goto-char (search-forward " " nil t)))
-
-
-(defun wat-macro-sanitize ()
-  "Repeatly applies macro expansion on the current buffer
-   at point until no more expansions are possible."
-  (let ((more t))
-    (while more
-      (setq more (wat-macro-sanitize-1)))))
-
-
-(defun wat-expand (form buffer-name)
-  "Given a wat-macro FORM and buffer BUFFER-NAME,
-   expand FORM and annotate expansions with macro comments."
-  (wat-printer form (get-buffer-create buffer-name))
-  (switch-to-buffer buffer-name)
-  (goto-char (point-min))
-  (wat-macro-sanitize))
-
-
-(defmacro wat-module (&rest exp)
+(defmacro define-wat-module (&rest exp)
   "A macro replacement for wat's macro top-level syntax."
-  `(cons 'module
-	 (mapcar 'macroexpand-all
-		 (quote ,exp))))
+  (if (not (consp exp))
+      (error (message "Module must be an s-expression")))
+  (if (not (consp (car exp)))
+      (error (message "Module must be enclosed in s-expression")))
+  (if (not (equal (caar exp) 'module))
+      (error (message "Module definition not found")))      
+  `(macroexpand-all (quote ,(car exp))))
 
-(defalias '@ 'wat-macro
+
+
+
+
+
+
+
+
+
+
+
+(defmacro wat-module-expand (buffer-or-name &rest module)
+  (wat-module-really-expand buffer-or-name (quote module)))
+
+
+  
+
+
+(defun wat-module-check (module)
+  (if (not (consp module))
+      (error "Module must be an s-expression"))
+  (if (and (consp module)
+	   (not (equal (car module) 'module)))
+      (error "Module must start with tag \"module\""))
+  (if  (and (consp module)
+	    (> (length module) 1))
+      (error "Module contains more than one top-level s-expression")))
+  
+  
+  
+
+  
+
+(defalias '@ 'define-wat-macro
   "@ extends wat syntax to support macro expansions.")
 
-(defalias 'module 'wat-module
-  "Bind macro expander to match wat's top-level syntax.")
+
+;;; wasm-interp support
+
+(defvar wasm-interp-file-path "/usr/local/bin/wasm-interp"
+  "Path to wasm-interp")
+
+(defvar wat-desugar-file-path "/usr/local/bin/wat-desugar"
+  "Path to wat-desugar")
+
+(defvar wasm-interp-args '("--host-print")
+  "Arguments to pass to `run-wasm-interp")
+
+(defun run-wasm-interp ()
+  "Run an inferior instance of `wasm-interp'"
+  (interactive)
+  (let*
+      ((proc-name "wasm-interp")
+       (proc-buf "*wasm-interp*")
+       (buffer (comint-check-proc proc-name)))
+   (pop-to-buffer-same-window
+      (if (or buffer (not (derived-mode-p 'wat-mode))
+              (comint-check-proc (current-buffer)))
+          (get-buffer-create (or buffer proc-buf))
+        (current-buffer)))
+     (unless buffer
+       (apply 'make-comint-in-buffer proc-name buffer
+	      wasm-interp-file-path wasm-interp-args))))
 
 ;;;
 
@@ -143,72 +209,15 @@
   (use-local-map wat-mode-map)
   (setq font-lock-defaults '(wat-font-highlights)))
 
-;;; wasm-interp support
-
-(defvar wasm-interp-file-path "/usr/local/bin/wasm-interp"
-  "Path to wasm-interp")
-
-(defvar wat-desugar-file-path "/usr/local/bin/wat-desugar"
-  "Path to wat-desugar")
-
-(defvar wasm-interp-args '("--host-print")
-  "Arguments to pass to `run-wasm-interp")
-
-(defun run-wasm-interp ()
-  "Run an inferior instance of `wasm-interp'"
-  (interactive)
-  (let*
-      ((proc-name "wasm-interp")
-       (proc-buf "*wasm-interp*")
-       (buffer (comint-check-proc proc-name)))
-   (pop-to-buffer-same-window
-      (if (or buffer (not (derived-mode-p 'wat-mode))
-              (comint-check-proc (current-buffer)))
-          (get-buffer-create (or buffer proc-buf))
-        (current-buffer)))
-     (unless buffer
-       (apply 'make-comint-in-buffer proc-name buffer
-	      wasm-interp-file-path wasm-interp-args))))
-
-;;;
-
-;; ? Unused
-(defun wat-module-yank ()
-  "Assumes the buffer is active and cursor is over it"
-    (if (not (search-backward "module"))
-	(throw 'module-missing
-	       (format "WebAssembly module tag not found. "
-		       (buffer-file-name))))
-    (backward-char) ;; on to open paren
-    (kill-sexp))
-
-(defun wat-format-canonical ()
-  (let ((output-file (buffer-file-name)))
-    (make-process
-     :name "wat-desugar"
-     :buffer nil
-     :command (list wat-desugar-file-path
-		    output-file
-		    "-o"
-		    output-file))))
 
 
-
-
-(defun wat-expand-all (&optional format-canonical)
-  (save-buffer)
-  (let ((expanded-buffer (get-buffer-create (concat (buffer-file-name) ".1")))
-	(start (point-min))
-	(end   (point-max)))    
-    (copy-region-as-kill start end)
-    (with-current-buffer expanded-buffer
-      (erase-buffer))
-    (wat-expand (eval (read (current-kill 0)))
-		expanded-buffer)))
-      ;;(kill-new (format "%s" (eval (read (current-kill 0)))))
-      ;;(yank))))
-   ;; (print (eval (read (current-kill 0))) expanded-buffer)))
+  
+  
+(defun wat-macro (name quoted-body)
+  (insert (format ";; %s\n" name))
+  (insert quoted-body))
 
 (provide 'wat-mode)
 (load "/home/devon/repos/wat-mode/demo.el")
 
+(global-set-key (kbd "C-c j") 'wat-macro-expand-all)

@@ -1,35 +1,31 @@
 
-
 (defconst *wat-comment-token* ";;"
   "wat comment token - used for annotating macro expansions.")
 
-(defconst *wat-macro-tag* 'wat-macro
+(defconst *wat-macro-tag* "wat-macro"
   "Prefix used to identify all macro expansions.")
 
-(defconst *wat-macro-tag-sep* ":"
-  "Separator character for macro expansion tags")
-
-(defalias 'wat-fmt 'pp
-  "Procedure used to format expressions during macro expansion.")
+(defalias 'wat-fmt 'pp)
 
 
-(defun eval-and-replace (&optional forward)
-  "Replace an sexp with its value. If FORWARD is non-nil,
-   kill the sexp following point. Otherwise, kill preceeding sexp."
-  (interactive)
-  (if forward
-      (kill-sexp 1)
-      (backward-kill-sexp))
-  (condition-case nil
-      (wat-fmt (eval (read (current-kill 0)))
-             (current-buffer))
-    (error (message "Invalid expression")
-           (insert (current-kill 0)))))
+(defmacro define-wat-macro (name args &rest body)
+    "Extends wat syntax with simple macro expansions."    
+    (let ((tag (make-symbol *wat-macro-tag*))
+	  (name-string (symbol-name name)))
+      `(defmacro ,name ,(append args '(&rest body))       
+	 (backquote (,tag ,name-string ,@body)))))
 
+
+(defalias '@ 'define-wat-macro
+  "@ extends wat syntax to support macro expansions.")
+
+
+;;;;;;;;;
 
 (defun wat-expand-in-place (&optional forward)
   "Replace an sexp with its value. "
   (interactive)
+  (save-excursion
   (if forward
       (kill-sexp 1)
       (backward-kill-sexp))
@@ -38,77 +34,48 @@
 	(wat-fmt (macroexpand-all exp)
 		 (current-buffer)))
       ('error (message "Invalid expression")
-	     (insert (current-kill 0)))))
+	     (insert (current-kill 0))))))
 
-(defun wat-buffer-output-name (buffer-name)
-  (concat buffer-name ".1"))
-
-(defun wat-compile-module (&optional forward)
-  (let ((buffer (get-buffer-create
-		 (wat-buffer-output-name (buffer-name)))))
-    (intern *wat-macro-tag*)
-    (fset *wat-macro-tag* (lambda (name body) body))
-    (with-current-buffer buffer
-      (eval-and-replace forward))
-    (unintern *wat-macro-tag*)))
-	
-(global-set-key (kbd "C-c e") 'eval-and-replace)
-(global-set-key (kbd "C-c k") 'wat-expand-in-place)
-
-     
-(defmacro define-wat-macro (name args &rest body)
-    "Extends wat syntax with simple macro expansions."    
-    (let ((tag 'wat-macro)
-	  (name-string (symbol-name name)))
-      `(defmacro ,name ,(append args '(&rest body))       
-	   (backquote (,tag ,name-string ,@body)))))
-		 
-
-(defmacro define-wat-module (&rest exp)
-  "A macro replacement for wat's macro top-level syntax."
-  (if (not (consp exp))
-      (error (message "Module must be an s-expression")))
-  (if (not (consp (car exp)))
-      (error (message "Module must be enclosed in s-expression")))
-  (if (not (equal (caar exp) 'module))
-      (error (message "Module definition not found")))      
-  `(macroexpand-all (quote ,(car exp))))
+(defun wat-sanitize-1 ()
+  (let* ((label (concat "(" *wat-macro-tag*))
+	 (labelc (length label))	
+	 (ostart (progn
+		   (search-forward label nil nil)
+		   (goto-char (- (point) labelc))
+		   (point)))
+	 (oend (progn
+		 (forward-list)
+		 (point))))
+    (goto-char ostart)
+    (delete-char labelc)
+    (insert *wat-comment-token*)
+    (goto-char (- oend labelc))
+    (delete-char 1)
+    (goto-char ostart)))
 
 
+(defun wat-sanitize ()
+  (interactive)
+  (save-excursion 
+    (condition-case nil
+	(while t
+	  (wat-sanitize-1))
+      ('error  (message "Macro expansion complete!")))))
+
+(defun wat-remove-escapes ()
+  (interactive)
+  (save-excursion
+  (while (search-forward "\\" nil t)
+       (replace-match "" t nil))))
+
+(defun wat-macro-expand ()
+  (interactive)
+  (wat-expand-in-place t)
+  (wat-sanitize)
+  (wat-remove-escapes))
 
 
-
-
-
-
-
-
-
-
-(defmacro wat-module-expand (buffer-or-name &rest module)
-  (wat-module-really-expand buffer-or-name (quote module)))
-
-
-  
-
-
-(defun wat-module-check (module)
-  (if (not (consp module))
-      (error "Module must be an s-expression"))
-  (if (and (consp module)
-	   (not (equal (car module) 'module)))
-      (error "Module must start with tag \"module\""))
-  (if  (and (consp module)
-	    (> (length module) 1))
-      (error "Module contains more than one top-level s-expression")))
-  
-  
-  
-
-  
-
-(defalias '@ 'define-wat-macro
-  "@ extends wat syntax to support macro expansions.")
+(global-set-key (kbd "C-c 1") 'wat-macro-expand)
 
 
 ;;; wasm-interp support
@@ -138,48 +105,57 @@
        (apply 'make-comint-in-buffer proc-name buffer
 	      wasm-interp-file-path wasm-interp-args))))
 
-;;;
+;;;;;;;;;;;;;;;;
+
+
 
 (setq wat-font-highlights
-      '(("module" . font-lock-warning-face)
+      '(       
+	;; memory instructions
+	("get_local\s-*\\|set_local\s-*\\|tee_local\s-*"                        . font-lock-function-name-face)
+	("get_global\s-*\\|set_global\s-*"                                      . font-lock-function-name-face)
+	("align\s-*\\|offset\s-*"                                               . font-lock-function-name-face)
+	("load8_u\s-*\\|load8_s\s-*"                                            . font-lock-function-name-face)
+	("load16_u\s-*\\|load16_s\s-*"                                          . font-lock-function-name-face)
+	("load32_u\s-*\\|load32_s\s-*"                                          . font-lock-function-name-face)
+	("load\s-*"                                                             . font-lock-function-name-face)
+	("store\s-*\\|store8\\store16\s-*\\|store32\s-*"                        . font-lock-function-name-face)	
+	("memory.size\s-*\\|memory.grow\s-*"                                    . font-lock-function-name-face)
 
 	;; operations
-	("extend_s/i32\\|extend_u/i32" . font-lock-builtin-face)
-	("convert_s/i32\\|convert_u/i32\\|convert_s/i64\\|convert_u/i64" . font-lock-builtin-face)
-	("demote/f64\\|promote/f32" . font-lock-builtin-face)
-	("reinterpret/f32\\|reinterpret/f64" . font-lock-builtin-face)
-	("const\\|clz\\|ctz\\|popcnt" . font-lock-builtin-face)
-	("add\\|sub\\|mul\\|div\\|div_s\\|div_u\\|rem_s\\|rem_u" . font-lock-builtin-face)
-	("and\\|or\\|xor\\|shl\\|shr_s\\|shr_u\\|rotl\\|rotr" . font-lock-builtin-face)
-	("abs\\|neg\\|ceil\\|floor\\|trunc" . font-lock-builtin-face)
-	("nearest\\|sqrt\\|min\\|max\\|copysign" . font-lock-builtin-face)
-	("eqz\\|eq\\|ne\\|lt\\|lt_s\\|lt_u\\|gt\\|gt_s\\|gt_u\\|le_s\\|le_u\\|ge_s\\|ge_u" . font-lock-builtin-face)
-	("wrap/i64\\|trunc_s/f32\\|trunc_u/f32\\|trunc_s/f64\\|trunc_u/64" . font-lock-builtin-face)
-        ("unreachable\\|nop\\|br\\|br_if\\|br_table\\|return\\|call\\call_indirect" .
-	 font-lock-builtin-face)
-	("drop\\|select" .  font-lock-builtin-face)
+	("extend_s/i32\s-*\\|extend_u/i32\s-*"                                  . font-lock-builtin-face)
+	("convert_s/i32\s-*\\|convert_u/i32\s-*"                                . font-lock-builtin-face)
+	("convert_s/i64\s-*\\|convert_u/i64\s-*"                                . font-lock-builtin-face)
+	("demote/f64\s-*\\|promote/f32\s-*"                                     . font-lock-builtin-face)
+	("reinterpret/f32\s-*\\|reinterpret/f64\s-*"                            . font-lock-builtin-face)
+	("const\s-*\\|clz\s-*\\|ctz\s-*\\|popcnt\s-*"                           . font-lock-builtin-face)
+	("add\s-*\\|sub\s-*\\|mul\s-*"                                          . font-lock-builtin-face)
+	("div\s-*\\|div_s\s-*\\|div_u\s-*\\|rem_s\s-*\\|rem_u\s-*"              . font-lock-builtin-face)
+	("and\s-*\\|or\s-*\\|xor\s-*"                                           . font-lock-builtin-face)
+	("shl\s-*\\|shr_s\s-*\\|shr_u\s-*\\|rotl\s-*\\|rotr\s-*"                . font-lock-builtin-face)
+	("abs\s-*\\|neg\s-*\\|ceil\s-*\\|floor\s-*\\|trunc\s-*"                 . font-lock-builtin-face)
+	("nearest\s-*\\|sqrt\s-*\\|min\s-*\\|max\s-*\\|copysign\s-*"            . font-lock-builtin-face)
+	("eqz\s-*\\|eq\s-*\\|ne\s-*\\|lt\s-*\\|lt_s\s-*\\|lt_u\s-\\|le_u\s-*"   . font-lock-builtin-face)
+	("gt\s-*\\|gt_s\s-*\\|gt_u\s-*\\|le_s\s-*\\|ge_s\s-*\\|ge_u\s-*"        . font-lock-builtin-face)
+	("wrap/i64\s-*"                                                         . font-lock-builtin-face)
+	("trunc_s/f32\s-*\\|trunc_u/f32\s-*\\|trunc_s/f64\s-*\\|trunc_u/64\s-*" . font-lock-builtin-face)
+	("br\s-*\\|br_if\s-*\\|br_table\s-*"                                    . font-lock-builtin-face)
+	("nop\s-*\\|unreachable\s-*\\|return\s-*\\|call_indirect\\|call\s-*"    . font-lock-builtin-face)
+	("drop\s-*\\|select\s-*"                                                . font-lock-builtin-face)
 	
 	;; types
-	("i32\\|i64\\|f32\\|f64" . font-lock-type-face)   
-	("local\\|param\\|result" . font-lock-type-face) 
-        ("anyfunc"               . font-lock-type-face)
+	("i32[\s-.]*\\|i64[\s-*.]\\|f32[\s-*.]\\|f64[\s-*.]"                    . font-lock-type-face)
+	("local\s-*\\|param\s-*\\|result\s-*"                                   . font-lock-type-face) 
+	("anyfunc\s-*"                                                          . font-lock-type-face)
 
-	;; top-level forms
-	("type\\|func\\|elem\\|data\\|global\\|table\\|memory\\|start\\|import\\|export" . font-lock-keyword-face)
-	
-	;; groupings
-	("loop\\|block\\|if\\|else\\|end"  . font-lock-regex-grouping-construct)           
+        ;; top-level forms
+        ("module"                                                               . font-lock-keyword-face)
+        ("type\s-*\\|func\s-*\\|elem\s-*\\|data\s-*\\|global\s-*"               . font-lock-keyword-face)
+        ("table\s-*\\|memory\s-*\\|start\s-*\\|import\s-*\\|export\s-*"         . font-lock-keyword-face)
+
+        ;; groupings
+        ("loop\s-*\\|block\s-*\\|if\s-*\\|else\s-*\\|end\s-*"                   . font-lock-regex-grouping-construct)))
 		
-	;; memory instructions
-	("get_local\\|set_local\\|tee_local\\|get_global\\|set_global" .
-	 font-lock-variable-name-face)                          
-	("align\\|offset" . font-lock-function-name-face)
-	("load8_u\\|load8_s" . font-lock-function-name-face)
-	("load16_u\\|load16_s" . font-lock-function-name-face)
-	("load32_u\\|load32_s" . font-lock-function-name-face)
-	("load" . font-lock-function-name-face)
-	("store\\|store8\\store16\\|store32" . font-lock-function-name-face)	
-      	("memory\.size\\|memory\.grow" . font-lock-function-name-face)))
 	
 	
 
@@ -191,17 +167,13 @@
     (define-key map [uncomment-region]
       '("Uncomment Out Region" . (lambda (beg end)
                                    (interactive "r")
-                                   (comment-region beg end '(4)))))
-    (define-key map [comment-region] '("Comment Out Region" . comment-region))
-    (define-key map [indent-region] '("Indent Region" . indent-region))
-    (define-key map [indent-line] '("Indent Line" . lisp-indent-line))
-    (define-key map (kbd "C-c C-@") 'wat-)
+                                   (comment-region beg end '(4))))
+)
     (put 'comment-region 'menu-enable 'mark-active)
     (put 'uncomment-region 'menu-enable 'mark-active)
     (put 'indent-region 'menu-enable 'mark-active)
     smap)
-  "Keymap for wat-mode.
-   All commands in `lisp-mode-shared-map' are inherited by this map.")
+  "Keymap for wat-mode, derived from lisp-mode.")
 
 
 (define-derived-mode wat-mode lisp-mode "wat-mode"
@@ -210,14 +182,8 @@
   (setq font-lock-defaults '(wat-font-highlights)))
 
 
-
-  
-  
-(defun wat-macro (name quoted-body)
-  (insert (format ";; %s\n" name))
-  (insert quoted-body))
-
 (provide 'wat-mode)
-(load "/home/devon/repos/wat-mode/demo.el")
 
-(global-set-key (kbd "C-c j") 'wat-macro-expand-all)
+
+
+

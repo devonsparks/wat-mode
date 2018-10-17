@@ -1,11 +1,30 @@
+;;
+;;   Copyright (C) 2018, Devon D.Sparks
+;;   URL: https://github.com/devonsparks/wat-mode
+;;
+;;  This program is free software: you can redistribute it and/or modify
+;;  it under the terms of the GNU General Public License as published by
+;;  the Free Software Foundation, either version 3 of the License, or
+;;  (at your option) any later version.
+
+;;  This program is distributed in the hope that it will be useful,
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;  GNU General Public License for more details.
+
+;;  You should have received a copy of the GNU General Public License
+;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;;
+
 
 (defconst *wat-comment-token* ";;"
   "wat comment token - used for annotating macro expansions.")
 
+
 (defconst *wat-macro-tag* "wat-macro"
   "Prefix used to identify all macro expansions.")
 
-(defalias 'wat-fmt 'pp)
+(defalias 'wat-output 'pp)
 
 
 (defmacro define-wat-macro (name args &rest body)
@@ -19,7 +38,6 @@
 (defalias '@ 'define-wat-macro
   "@ extends wat syntax to support macro expansions.")
 
-
 ;;;;;;;;;
 
 (defun wat-expand-in-place (&optional forward)
@@ -31,30 +49,31 @@
       (backward-kill-sexp))
   (condition-case nil
       (let ((exp (read (current-kill 0))))
-	(wat-fmt (macroexpand-all exp)
-		 (current-buffer)))
+	(wat-output (macroexpand-all exp)
+		 (current-buffer)))  
       ('error (message "Invalid expression")
 	     (insert (current-kill 0))))))
+
 
 (defun wat-sanitize-1 ()
   (let* ((label (concat "(" *wat-macro-tag*))
 	 (labelc (length label))	
-	 (ostart (progn
+	 (pstart (progn
 		   (search-forward label nil nil)
 		   (goto-char (- (point) labelc))
 		   (point)))
-	 (oend (progn
+	 (pend (progn
 		 (forward-list)
 		 (point))))
-    (goto-char ostart)
+    (goto-char pstart)
     (delete-char labelc)
     (insert *wat-comment-token*)
-    (goto-char (- oend labelc))
+    (goto-char (- pend labelc))
     (delete-char 1)
-    (goto-char ostart)))
+    (goto-char pstart)))
 
 
-(defun wat-sanitize ()
+(defun wat-strip-wrapper ()
   (interactive)
   (save-excursion 
     (condition-case nil
@@ -62,51 +81,22 @@
 	  (wat-sanitize-1))
       ('error  (message "Macro expansion complete!")))))
 
+
 (defun wat-remove-escapes ()
   (interactive)
   (save-excursion
   (while (search-forward "\\" nil t)
        (replace-match "" t nil))))
 
+
 (defun wat-macro-expand ()
   (interactive)
   (wat-expand-in-place t)
-  (wat-sanitize)
+  (wat-strip-wrapper)
   (wat-remove-escapes))
 
 
-(global-set-key (kbd "C-c 1") 'wat-macro-expand)
-
-
-;;; wasm-interp support
-
-(defvar wasm-interp-file-path "/usr/local/bin/wasm-interp"
-  "Path to wasm-interp")
-
-(defvar wat-desugar-file-path "/usr/local/bin/wat-desugar"
-  "Path to wat-desugar")
-
-(defvar wasm-interp-args '("--host-print")
-  "Arguments to pass to `run-wasm-interp")
-
-(defun run-wasm-interp ()
-  "Run an inferior instance of `wasm-interp'"
-  (interactive)
-  (let*
-      ((proc-name "wasm-interp")
-       (proc-buf "*wasm-interp*")
-       (buffer (comint-check-proc proc-name)))
-   (pop-to-buffer-same-window
-      (if (or buffer (not (derived-mode-p 'wat-mode))
-              (comint-check-proc (current-buffer)))
-          (get-buffer-create (or buffer proc-buf))
-        (current-buffer)))
-     (unless buffer
-       (apply 'make-comint-in-buffer proc-name buffer
-	      wasm-interp-file-path wasm-interp-args))))
-
 ;;;;;;;;;;;;;;;;
-
 
 
 (setq wat-font-highlights
@@ -158,21 +148,11 @@
 		
 	
 	
-
 (defvar wat-mode-map
-  (let ((smap (make-sparse-keymap))
-        (map (make-sparse-keymap "wat")))
-    (set-keymap-parent smap lisp-mode-shared-map)
-    (define-key map [run-wat-interpreter] '("Run wat interpreter" . run-scheme))
-    (define-key map [uncomment-region]
-      '("Uncomment Out Region" . (lambda (beg end)
-                                   (interactive "r")
-                                   (comment-region beg end '(4))))
-)
-    (put 'comment-region 'menu-enable 'mark-active)
-    (put 'uncomment-region 'menu-enable 'mark-active)
-    (put 'indent-region 'menu-enable 'mark-active)
-    smap)
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map lisp-mode-shared-map)
+    (define-key map (kbd "C-c 1")   'wat-macro-expand)
+    map)
   "Keymap for wat-mode, derived from lisp-mode.")
 
 
@@ -180,6 +160,9 @@
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
   (setq font-lock-defaults '(wat-font-highlights)))
+
+
+(add-to-list 'auto-mode-alist '("\\.wat\\'" . wat-mode))
 
 
 (provide 'wat-mode)

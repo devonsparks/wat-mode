@@ -1,4 +1,4 @@
-;;
+;
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;
@@ -19,7 +19,18 @@
 (require 'wat-regex)
 (require 'wat-macro)
 
-(setq wat-mode-font-highlights
+
+(defvar wat-mode-syntax-table
+  (let ((table (make-syntax-table lisp-mode-syntax-table)))
+    (modify-syntax-entry ?\(  "()1nb" table)
+    (modify-syntax-entry ?\)  ")(4nb" table)
+    (modify-syntax-entry ?\;  "_ 123" table)
+    (modify-syntax-entry ?\n ">b" table)
+    table)
+  "Syntax table for `wat-mode'.")
+
+
+(defvar wat-mode-font-highlights
       (list
        (cons wat-mem-instr-regex      'font-lock-builtin-face)
        (cons wat-num-instr-regex      'font-lock-builtin-face)
@@ -28,11 +39,12 @@
        (cons wat-var-instr-regex      'font-lock-builtin-face)
        (cons wat-par-instr-regex      'font-lock-builtin-face)
        (cons wat-ident-regex          'font-lock-variable-name-face)
+       (cons wat-table-type-regex     'font-lock-type-face)
        (cons wat-func-type-regex      'font-lock-type-face)
        (cons wat-global-type-regex    'font-lock-type-face)
        (cons wat-keyword-regex        'font-lock-keyword-face)))
-              	
-	
+
+
 (defvar wat-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map lisp-mode-shared-map)
@@ -41,14 +53,16 @@
   "Keymap for wat-mode, derived from lisp-mode.")
 
 
+
 (define-derived-mode wat-mode lisp-mode "wat-mode"
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
-  (setq font-lock-defaults '(wat-mode-font-highlights)))
+  (setq font-lock-defaults '(wat-mode-font-highlights))
+  (set-syntax-table wat-mode-syntax-table))
 
 (add-to-list 'auto-mode-alist '("\\.wat\\'" . wat-mode))
 (add-to-list 'auto-mode-alist '("\\.wast\\'" . wat-mode))
 
 (provide 'wat-mode)
 
-;; wat-mode.el ends her
+;; wat-mode.el ends here

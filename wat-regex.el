@@ -18,8 +18,9 @@
 
 (require 'rx)
 
-(setq wat-mem-instr-regex
-      (rx
+(defvar wat-mem-instr-regex
+      (eval-when-compile
+	(rx
        (or
 	"memory.size"
 	"memory.grow"
@@ -39,10 +40,11 @@
 	   (or
 	    (and "store" (zero-or-one (or "8" "16")))
 	    (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u")))))))
-	 (zero-or-more space)))))
+	 (zero-or-more space))))))
 
-(setq wat-num-instr-regex
-      (rx
+(defvar wat-num-instr-regex
+  (eval-when-compile
+    (rx
        (or
 	"f32.demote/f64"
 	"f64.promote/f32"
@@ -96,20 +98,22 @@
 		  "le"
 		  "ge"
 		  (and "convert" "_" (or "s" "u") "/" (or "i32" "i64"))
-		  (and "reinterpret" "/" (or "i32" "i64")))))))
+		  (and "reinterpret" "/" (or "i32" "i64"))))))))
 		  
 
-(setq wat-folded-instr-regex
+(defvar wat-folded-instr-regex
+  (eval-when-compile
       (rx
        (or "block"
 	   "if"
 	   "then"
 	   "else"
 	   "end"
-	   "loop")))
+	   "loop"))))
 
 
-(setq wat-control-instr-regex
+(defvar wat-control-instr-regex
+  (eval-when-compile
       (rx
        (or "unreachable"
 	   "nop"
@@ -118,31 +122,35 @@
 	   "br_table"
 	   "return"
 	   "call_indirect"
-	   "call")))
+	   "call"))))
 
-(setq wat-var-instr-regex
+(defvar wat-var-instr-regex
+  (eval-when-compile
       (rx
-	(and (or "tee" (and (or "g" "s") "et")) "_" (or "global" "local"))))
+	(and (or "tee" (and (or "g" "s") "et")) "_" (or "global" "local")))))
 
-(setq wat-par-instr-regex
-      (rx
-       (or "drop" "select")))
+(defvar wat-par-instr-regex
+  (eval-when-compile
+    (rx
+       (or "drop" "select"))))
 
-(setq wat-ident-regex
-      "$[0-9a-zA-Z!#$%'*+-./:<=>\?@^_`|~]+")
+(defvar wat-ident-regex
+  (eval-when-compile
+      "$[0-9a-zA-Z!#$%'*+-./:<=>\?@^_`|~]+"))
 
-(setq wat-func-type-regex
-      (rx
-       (or "func" "param" "result")))
+(defvar wat-func-type-regex
+  (eval-when-compile  (rx
+		       (or "param" "result"))))
 
-(setq wat-table-type-regex
-      (rx "anyfunc"))
+(defvar wat-table-type-regex
+  (eval-when-compile (rx "anyfunc")))
 
-(setq wat-global-type-regex
-      (rx (and "mut" space)))
+(defvar wat-global-type-regex
+      (eval-when-compile (rx (and "mut" space))))
 
-(setq wat-keyword-regex
-      (rx
+(defvar wat-keyword-regex
+  (eval-when-compile
+    (rx
        (or
 	(and "type" space)
 	(and "func" space)
@@ -156,7 +164,7 @@
 	(and "offset" space)
 	(and "elem" space)
 	(and "data" space)
-	(and "module"))))
+	(and "module")))))
 
 (provide 'wat-regex)
 

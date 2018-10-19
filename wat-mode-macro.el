@@ -1,4 +1,5 @@
-;;
+;;; wat-mode-macro.el --- Assembler macros for `wat-mode' -*- lexical-binding: t; -*-
+
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;
@@ -16,6 +17,8 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
+;;; Code:
+
 (defconst *wat-macro-tag* "wat-macro"
   "Prefix used to identify all macro expansions.")
 
@@ -25,10 +28,10 @@
 (defalias 'wat-output 'pp)
 
 (defmacro define-wat-macro (name args &rest body)
-    "Extends wat syntax with simple macro expansions."    
+    "Extends wat syntax with simple macro expansions."
     (let ((tag (make-symbol *wat-macro-tag*))
 	  (name-string (symbol-name name)))
-      `(defmacro ,name ,(append args '(&rest body))       
+      `(defmacro ,name ,(append args '(&rest body))
 	 (backquote (,tag ,name-string ,@body)))))
 
 
@@ -37,7 +40,7 @@
 
 
 (defun wat-expand-in-place (&optional forward)
-  "Replace an sexp with its value. "
+  "Replace an sexp with its value."
   (interactive)
   (save-excursion
   (if forward
@@ -95,4 +98,4 @@
 
 (provide 'wat-mode-macro)
 
-;; wat-mode-macro.el ends here
+;;; wat-mode-macro.el ends here

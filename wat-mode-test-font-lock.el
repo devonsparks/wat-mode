@@ -1,4 +1,5 @@
-;;
+;;; wat-mode-test-font-lock.el --- ert tests of `wat-mode' font locks -*- lexical-binding: t; -*-
+
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;

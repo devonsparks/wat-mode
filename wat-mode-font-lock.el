@@ -1,4 +1,5 @@
-;;
+;;; wat-mode-font-lock.el --- font lock regexps for WebAssembly -*- lexical-binding: t; -*-
+
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;

@@ -1,4 +1,5 @@
-;;
+;;; wat-mode.el --- A major mode for WebAssembly -*- lexical-binding: t; -*-
+
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;

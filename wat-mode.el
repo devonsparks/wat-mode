@@ -16,16 +16,35 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
+;; * TODO
+
+;; - comment-start-skip
+;; - keyword levels
+;; - texinfo documentation
+;; - docstrings
+;; - travis CI build
+;; - melpa package
+
+
 (require 'wat-regex)
 (require 'wat-macro)
 
 
 (defvar wat-mode-syntax-table
   (let ((table (make-syntax-table lisp-mode-syntax-table)))
+    ;; update identifier character class 
+    ;; to support word jumps
+    (mapc #'(lambda (c)
+	      (modify-syntax-entry c "w" table))
+	  '(?! ?# ?$ ?% ?\' ?* ?+ ?- ?. ?\/ ?:
+	    ?< ?= ?> ?\\ ?? ?@ ?^ ?_ ?\` ?| ?~))
+
+    ;; enable wat block comments
     (modify-syntax-entry ?\(  "()1nb" table)
     (modify-syntax-entry ?\)  ")(4nb" table)
-    (modify-syntax-entry ?\;  "_ 123" table)
+    (modify-syntax-entry ?\;  "< 123" table)
     (modify-syntax-entry ?\n ">b" table)
+
     table)
   "Syntax table for `wat-mode'.")
 
@@ -50,6 +69,7 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map lisp-mode-shared-map)
     (define-key map (kbd "C-c 1")   'wat-macro-expand)
+    (define-key map (kbd "RET") 'newline-and-indent)
     map)
   "Keymap for wat-mode, derived from lisp-mode.")
 
@@ -63,7 +83,6 @@
 
 (add-to-list 'auto-mode-alist '("\\.wat\\'" . wat-mode))
 (add-to-list 'auto-mode-alist '("\\.wast\\'" . wat-mode))
-
 
 (provide 'wat-mode)
 

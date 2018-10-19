@@ -47,7 +47,7 @@
 
 (defconst wat-mode-font-lock-keywords-1
   (list
-   (cons wat-keyword-regex        'font-lock-keyword-face))
+   (cons wat-mode-font-lock-keyword-regex        'font-lock-keyword-face))
   "`wat-mode' highlight level 1 oof 4.
   
     Highlights core wat type keywords only.")
@@ -57,14 +57,14 @@
   (append
    wat-mode-font-lock-keywords-1
    (list
-    (cons wat-control-instr-regex  'font-lock-builtin-face)
-    (cons wat-folded-instr-regex   'font-lock-builtin-face)
-    (cons wat-var-instr-regex      'font-lock-builtin-face)
-    (cons wat-par-instr-regex      'font-lock-builtin-face)
-    (cons wat-table-type-regex     'font-lock-type-face)
-    (cons wat-func-type-regex      'font-lock-type-face)
-    (cons wat-global-type-regex    'font-lock-type-face)
-    (cons wat-val-type-regex       'font-lock-type-face)))
+    (cons wat-mode-font-lock-control-instr-regex  'font-lock-builtin-face)
+    (cons wat-mode-font-lock-folded-instr-regex   'font-lock-builtin-face)
+    (cons wat-mode-font-lock-var-instr-regex      'font-lock-builtin-face)
+    (cons wat-mode-font-lock-par-instr-regex      'font-lock-builtin-face)
+    (cons wat-mode-font-lock-table-type-regex     'font-lock-type-face)
+    (cons wat-mode-font-lock-func-type-regex      'font-lock-type-face)
+    (cons wat-mode-font-lock-global-type-regex    'font-lock-type-face)
+    (cons wat-mode-font-lock-val-type-regex       'font-lock-type-face)))
    "`wat-mode' highlighting level 2 of 4.
      
      Highlights all core keywords minus numerical and memory instructions.")
@@ -74,9 +74,9 @@
   (append
    wat-mode-font-lock-keywords-2
    (list
-    (cons wat-ident-regex          'font-lock-variable-name-face)
-    (cons wat-mem-instr-regex      'font-lock-builtin-face)
-    (cons wat-num-instr-regex      'font-lock-builtin-face)))
+    (cons wat-mode-font-lock-ident-regex          'font-lock-variable-name-face)
+    (cons wat-mode-font-lock-mem-instr-regex      'font-lock-builtin-face)
+    (cons wat-mode-font-lock-num-instr-regex      'font-lock-builtin-face)))
   "`wat-mode' highlighting level 3 of 4.
    
     Highlights all core keywords.")
@@ -86,7 +86,7 @@
   (append
    wat-mode-font-lock-keywords-3
    (list
-    (cons wat-wast-regex            'font-lock-warning-face)))
+    (cons wat-mode-font-lock-wast-regex            'font-lock-warning-face)))
   "`wat-mode' highlighting level 4 of 4.
 
    Highlights all core keywords plus .wast extensions.")

@@ -1,4 +1,5 @@
-#+TITLE: wat-mode: Emacs macro assembling and editing support for WebAssembly's text format 
+#+TITLE: wat-mode
+#+SUBTITLE: Emacs macro assembling and editing support for WebAssembly's text format 
 #+AUTHOR: Devon Sparks
 #+STARTUP: showeverything
 
@@ -7,10 +8,9 @@
 ** Summary
   /wat-mode/ is an Emacs major mode for [[https://webassembly.github.io/spec/core/bikeshed/index.html#text-format%E2%91%A0][WebAssembly's text format]] based on
   /lisp-mode/. It currently supports:
-    + syntax highlighting for (all?) core WebAssembly keywords
+    + syntax highlighting for all core WebAssembly keywords including .wast, SIMD, and threading extensions. 
     + s-expression indentation (from /lisp-mode/)
-    + (un)commenting keybindings ~C-c C-c~
-    + assembler macros
+    + experimental macro assembler support
 
   /wat-mode/ can be helpful to those writing WebAssembly by hand. It pairs well
   with the [[https://github.com/WebAssembly/wabt][WebAssembly Binary Toolkit]].
@@ -24,14 +24,6 @@
 
 ** Tutorial 
 
-  
-** TODO
-  + Add Info links to documentation
-  + Add syntax regex for [[https://github.com/WebAssembly/wabt/issues/933][revised instruction names]]
-  + Distribution to Melpa
-
-
-* Implementation
 
 
 

@@ -53,23 +53,46 @@
       (or
 
 	;; i32 only
-	(and "i32" "."
-	     (or
-	      "wrap/i64" 
-	      "wrap_i64"  ;; spec#884 syntax
-	      (and "reinterpret"
-		   (or "/f32"  
-		       "_f32")))) ;;spec#884 syntax
-
-	;; i64 only
-	(and "i64" "."
-	     (or
-	      (and "extend" "_"
+       (and "i32"
+	    (or
+	     (and "x4" "." "trunc" "_"
 		  (or
-		   (and (or "s" "u") "/" "i32") 
-		   (and "i32_" (or "s" "u")))) ;; spec#884 syntax
-	      (and "reinterpret"
-		   (or "/f64" "_f64"))))
+		   (and (or "s" "u") "/" "f32x4:sat")
+		   (and "sat_f32x4" "_" (or "s" "u"))))
+	     		     
+	    (and "." (or
+		      "wrap/i64" 
+		      "wrap_i64"  ;; spec#884 syntax
+		      (and "atomic" "." "rmw"
+			   (or "8" "16")
+			   (or
+			    (and "_" (or "s" "u") "."
+				 (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg"))
+			    (and "." (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg") "_" "u")))
+		      (and "reinterpret"
+			   (or "/f32"  
+			       "_f32")))))) ;;spec#884 syntax
+
+       ;; i64 only
+       (and "i64"
+	    (or
+	     (and "x2" "." "trunc" "_"
+		  (or
+		   (and (or "s" "u") "/" "f64x2:sat")
+		   (and "sat_f64x2" "_" (or "s" "u"))))
+	     (and "." (or
+		       (and "atomic" "." "rmw"
+			   (or "8" "16" "32")
+			   (or
+			    (and "_" (or "s" "u") "."
+				 (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg"))
+			    (and "." (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg") "_" "u")))
+		       (and "extend" "_"
+			    (or
+			     (and (or "s" "u") "/" "i32") 
+			     (and "i32_" (or "s" "u")))) ;; spec#884 syntax
+		       (and "reinterpret"
+			    (or "/f64" "_f64"))))))
 
 	;; i32 and i64
 	(and (or "i32" "i64") "."
@@ -101,26 +124,38 @@
 				    (and (optional "sat_")
 					 (or "f32" "f64") "_" (or "s" "u")))))) ; spec/#884 syntax
 	;; f32 only
-	(and "f32" "."
+	(and "f32"
 	     (or
-	      (and "demote"
-		   (or "/" "_") ;; current + spec#884 syntax
-		   "f64")
-	      (and "reinterpret"
-		   (or "/" "_") ;; current + spec#884 syntax
-		       "i32")))
+	      (and "x4" "." "convert" "_"
+		   (or
+		    (and (or "s" "u") "/" "i32x4")
+		    (and "i32x4" "_" (or "s" "u"))))	      
+	      (and "." (or
+			(and "demote"
+			     (or "/" "_") ;; current + spec#884 syntax
+			     "f64")
+			(and "reinterpret"
+			     (or "/" "_") ;; current + spec#884 syntax
+			     "i32")))))
 
 	;; f64 only
-	(and "f64" "."
+	(and "f64"
 	     (or
-	      (and "promote"
-		   (or "/" "_") ;; current + spec#884 syntax
-		   "f32")
-	      (and "reinterpret"
-		   (or "/" "_") ;; current + spec#884 syntax
-		   "i64")))
-	
-	;; both f32 and f64
+	      (and "x2" "." "convert" "_"
+		   (or
+		    (and (or "s" "u") "/" "i64x2")
+		    (and "i64x2" "_" (or "s" "u"))))
+	      
+	      (and "."
+		   (or
+		    (and "promote"
+			 (or "/" "_") ;; current + spec#884 syntax
+			 "f32")
+		    (and "reinterpret"
+			 (or "/" "_") ;; current + spec#884 syntax
+			 "i64")))))
+	     
+	     ;; f32 and f64
 	(and (or "f32" "f64") "."
 	     (or  "const"
 		  "abs"
@@ -146,8 +181,9 @@
 		  (and "convert" "_"
 		       (or
 			(and (or "s" "u") "/" (or "i32" "i64"))   ;; current syntax
-			(and (or "i32" "i64") "_" (or "s" "u")))))) ;; spec#884 syntax
-      eow)))))
+			(and (or "i32" "i64") "_" (or "s" "u"))))))) ;; spec#884 syntax
+      eow))))
+      
 
 		  
 

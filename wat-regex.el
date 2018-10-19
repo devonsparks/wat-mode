@@ -21,31 +21,32 @@
 (defvar wat-mem-instr-regex
       (eval-when-compile
 	(rx
-       (or
-	(and "memory.size" eow)
-	(and "memory.grow" eow)
-	"align="
-	"offset="
-	(and     
-	 (or
-	  ;; floats
-	  (and "f" (or "32" "64") "."(or "store" "load"))
+	 (and
+	  bow
+	  (or
+	   "memory.size"
+	   "memory.grow"
+	   "align="
+	   "offset="
+	   ;; floats
+	   (and "f" (or "32" "64") "."(or "store" "load"))
 
-	  ;; special case for 64-bit integer loads only
-	  (and "i64" "." (or "load32_s" "load32_u" "store32"))
+	   ;; special case for 64-bit integer loads only
+	   (and "i64" "." (or "load32_s" "load32_u" "store32"))
 
-	  ;; integers
-	  (and	      
-	   "i" (or "32" "64") "."
-	   (or
-	    (and "store" (zero-or-one (or "8" "16")))
-	    (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u")))))))
-	  eow)))))
+	     ;; integers
+	   (and	      
+	    "i" (or "32" "64") "."
+	    (or
+	     (and "store" (zero-or-one (or "8" "16")))
+	     (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u"))))))
+	    eow)))))
 
 (defvar wat-num-instr-regex
   (eval-when-compile
     (rx
      (and
+      bow
       (or
 	"f32.demote/f64"
 	"f64.promote/f32"
@@ -107,19 +108,24 @@
 (defvar wat-folded-instr-regex
   (eval-when-compile
       (rx
-       (or
-	(and "block" eow)
-	(and (not (any "_")) "if" eow)
-	(and "then" eow)
-	(and "else" eow)
-	(and "loop" eow)
-	"end"))))
+       (and
+	bow
+	(or
+	 "block"
+	 "loop"
+	 (and (not (any "_")) "if")
+	 "then"
+	 "else"
+	 "end")
+	eow))))
+
 
 
 (defvar wat-control-instr-regex
   (eval-when-compile
       (rx
        (and
+	bow
 	(or
 	 "unreachable"
 	 "nop"
@@ -135,6 +141,7 @@
   (eval-when-compile
       (rx
        (and
+	bow
 	(and
 	 (or "tee" (and (or "g" "s") "et"))
 	 "_"
@@ -151,39 +158,55 @@
 
 (defvar wat-func-type-regex
   (eval-when-compile
-    (rx (and (or "param" "result") eow))))
+    (rx (and bow (or "param" "result") eow))))
 
 (defvar wat-table-type-regex
-  (eval-when-compile (rx (and "anyfunc" eow))))
+  (eval-when-compile (rx (and bow "anyfunc" eow))))
 
 (defvar wat-global-type-regex
-      (eval-when-compile (rx (and "mut" eow))))
+      (eval-when-compile (rx (and bow "mut" eow))))
 
 (defvar wat-val-type-regex
   (eval-when-compile
     (rx (and
 	space
 	 (or "i32" "i64" "f32" "f64")
-	 word-end))))
+	 eow))))
 
 (defvar wat-keyword-regex
   (eval-when-compile
     (rx
-     (or
-      (and "type" eow)
-      (and "func" eow)
-      (and "table" eow)
-      (and "memory" eow)
-      (and "global" eow)
-      (and "local" eow)
-      (and "import" eow)
-      (and "export" eow)
-      (and "start" eow)
-      (and "offset" eow)
-      (and "elem" eow)
-      (and "data" eow)
-      (and "module" eow)))))
-
+     (and
+      bow
+      (or
+       "type"
+       "func"
+       "table"
+       "memory"
+       "global"
+       "local"
+       "import"
+       "export"
+       "start"
+       "offset"
+       "elem"
+       "data"
+       "module")
+      eow))))
+     ;; (or
+     ;;  (and  "type" eow)
+     ;;  (and  "func" eow)
+     ;;  (and  "table" eow)
+     ;;  (and  "memory" eow)
+     ;;  (and  "global" eow)
+     ;;  (and  "local" eow)
+     ;;  (and  "import" eow)
+     ;;  (and  "export" eow)
+     ;;  (and  "start" eow)
+     ;;  (and  "offset" eow)
+     ;;  (and  "elem" eow)
+     ;;  (and  "data" eow)
+     ;;  (and  "module" eow)))))
 (provide 'wat-regex)
 
 ;; wat-regex.el ends here

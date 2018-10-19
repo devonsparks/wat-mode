@@ -18,10 +18,11 @@
 
 ;; * TODO
 
-;; - comment-start-skip
-;; - keyword levels
+;; - wast support
+;; - updated names
 ;; - texinfo documentation
 ;; - docstrings
+;; - add tests
 ;; - travis CI build
 ;; - melpa package
 
@@ -44,26 +45,45 @@
     (modify-syntax-entry ?\)  ")(4nb" table)
     (modify-syntax-entry ?\;  "< 123" table)
     (modify-syntax-entry ?\n ">b" table)
-
     table)
   "Syntax table for `wat-mode'.")
 
 
-(defvar wat-mode-font-highlights
+(defconst wat-mode-font-lock-keywords-1
   (list
-   (cons wat-ident-regex          'font-lock-variable-name-face)
-       (cons wat-mem-instr-regex      'font-lock-builtin-face)
-       (cons wat-num-instr-regex      'font-lock-builtin-face)
-       (cons wat-folded-instr-regex   'font-lock-builtin-face)
-       (cons wat-control-instr-regex  'font-lock-builtin-face)
-       (cons wat-var-instr-regex      'font-lock-builtin-face)
-       (cons wat-par-instr-regex      'font-lock-builtin-face)
-       (cons wat-table-type-regex     'font-lock-type-face)
-       (cons wat-func-type-regex      'font-lock-type-face)
-       (cons wat-global-type-regex    'font-lock-type-face)
-       (cons wat-val-type-regex       'font-lock-type-face)
-       (cons wat-keyword-regex        'font-lock-keyword-face)))
+   (cons wat-keyword-regex        'font-lock-keyword-face))
+  "wat-mode highlight level 1 oof 3 -- just type keywords")
 
+
+(defconst wat-mode-font-lock-keywords-2
+  (append
+   wat-mode-font-lock-keywords-1
+   (list
+    (cons wat-folded-instr-regex   'font-lock-builtin-face)
+    (cons wat-control-instr-regex  'font-lock-builtin-face)
+    (cons wat-var-instr-regex      'font-lock-builtin-face)
+    (cons wat-par-instr-regex      'font-lock-builtin-face)
+    (cons wat-table-type-regex     'font-lock-type-face)
+    (cons wat-func-type-regex      'font-lock-type-face)
+    (cons wat-global-type-regex    'font-lock-type-face)
+    (cons wat-val-type-regex       'font-lock-type-face)))
+   "`wat-mode' highlighting level level 2 of 3 -- missing number and memory instructions")
+
+
+(defconst wat-mode-font-lock-keywords-3
+  (append
+   wat-mode-font-lock-keywords-2
+   (list
+    (cons wat-ident-regex          'font-lock-variable-name-face)
+    (cons wat-mem-instr-regex      'font-lock-builtin-face)
+    (cons wat-num-instr-regex      'font-lock-builtin-face)))
+  "`wat-mode' highlighting level 3 of 3 -- all core keywords")
+
+
+(defvar wat-mode-font-lock-keywords
+  wat-mode-font-lock-keywords-3
+  "Default highlight level for `wat-mode'")
+       
 
 (defvar wat-mode-map
   (let ((map (make-sparse-keymap)))
@@ -71,14 +91,15 @@
     (define-key map (kbd "C-c 1")   'wat-macro-expand)
     (define-key map (kbd "RET") 'newline-and-indent)
     map)
-  "Keymap for wat-mode, derived from lisp-mode.")
+  "Keymap for `wat-mode', derived from lisp-mode.")
 
 
 (define-derived-mode wat-mode lisp-mode "wat-mode"
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
-  (setq font-lock-defaults '(wat-mode-font-highlights))
-  (set-syntax-table wat-mode-syntax-table))
+  (set (make-local-variable 'font-lock-defaults) '(wat-mode-font-lock-keywords))
+  (set-syntax-table wat-mode-syntax-table)
+  "`wat-mode', an Emacs major mode for editing WebAssembly's text format")
 
 
 (add-to-list 'auto-mode-alist '("\\.wat\\'" . wat-mode))

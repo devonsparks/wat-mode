@@ -16,23 +16,16 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
-;; * TODO
-
-;; - updated names
-;; - texinfo documentation
-;; - docstrings
-;; - add tests
-;; - travis CI build
-;; - melpa package
-
+;;; Code:
 
 (require 'wat-mode-font-lock)
 (require 'wat-mode-macro)
 
 
+
 (defvar wat-mode-syntax-table
   (let ((table (make-syntax-table lisp-mode-syntax-table)))
-    ;; update identifier character class 
+    ;; update identifier character class
     ;; to support word jumps
     (mapc #'(lambda (c)
 	      (modify-syntax-entry c "w" table))
@@ -51,9 +44,9 @@
 (defconst wat-mode-font-lock-keywords-1
   (list
    (cons wat-keyword-regex        'font-lock-keyword-face))
-  "`wat-mode' highlight level 1 oof 4
+  "`wat-mode' highlight level 1 oof 4.
   
-     Highlights core wat type keywords only.")
+    Highlights core wat type keywords only.")
 
 
 (defconst wat-mode-font-lock-keywords-2
@@ -68,7 +61,7 @@
     (cons wat-func-type-regex      'font-lock-type-face)
     (cons wat-global-type-regex    'font-lock-type-face)
     (cons wat-val-type-regex       'font-lock-type-face)))
-   "`wat-mode' highlighting level 2 of 4 
+   "`wat-mode' highlighting level 2 of 4.
      
      Highlights all core keywords minus numerical and memory instructions.")
 
@@ -80,7 +73,7 @@
     (cons wat-ident-regex          'font-lock-variable-name-face)
     (cons wat-mem-instr-regex      'font-lock-builtin-face)
     (cons wat-num-instr-regex      'font-lock-builtin-face)))
-  "`wat-mode' highlighting level 3 of 4
+  "`wat-mode' highlighting level 3 of 4.
    
     Highlights all core keywords.")
 
@@ -90,7 +83,7 @@
    wat-mode-font-lock-keywords-3
    (list
     (cons wat-wast-regex            'font-lock-warning-face)))
-  "`wat-mode' highlighting level 4 of 4
+  "`wat-mode' highlighting level 4 of 4.
 
    Highlights all core keywords plus .wast extensions.")
 
@@ -101,7 +94,7 @@
     (define-key map (kbd "C-c 1")   'wat-macro-expand)
     (define-key map (kbd "RET") 'newline-and-indent)
     map)
-  "Keymap for `wat-mode', derived from lisp-mode.")
+  "Keymap for `wat-mode', derived from `lisp-mode'.")
 
 
 (define-derived-mode wat-mode lisp-mode "wat-mode"
@@ -121,4 +114,4 @@
 
 (provide 'wat-mode)
 
-;; wat-mode.el ends here
+;;; wat-mode.el ends here

@@ -16,6 +16,8 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
+;;; Code:
+
 (add-to-list 'load-path
 	     (directory-file-name (file-name-directory load-file-name)))
 
@@ -24,4 +26,4 @@
 
 (provide 'wat-mode-test)
 
-;; wat-mode-test.el ends here
+;;; wat-mode-test.el ends here

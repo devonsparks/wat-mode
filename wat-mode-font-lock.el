@@ -16,10 +16,11 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
+;;; Code:
+
 (require 'rx)
 
-
-(defvar wat-mem-instr-regex
+(defconst wat-mem-instr-regex
       (eval-when-compile
 	(rx
 	 (or
@@ -36,16 +37,17 @@
 		(and "i64" "." (or "load32_s" "load32_u" "store32"))
 
 		;; integers
-		(and	      
+		(and
 		 "i" (or "32" "64") "."
 		 (or
 		  (and "store" (zero-or-one (or "8" "16")))
 		  (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u")))))))
-	       eow)))))
+	       eow))))
+      "Supported memory instructions in core.")
 
 
 
-(defvar wat-num-instr-regex
+(defconst wat-num-instr-regex
   (eval-when-compile
     (rx
      (and
@@ -61,7 +63,7 @@
 		   (and "sat_f32x4" "_" (or "s" "u"))))
 	     		     
 	    (and "." (or
-		      "wrap/i64" 
+		      "wrap/i64"
 		      "wrap_i64"  ;; spec#884 syntax
 		      (and "atomic" "." "rmw"
 			   (or "8" "16")
@@ -70,7 +72,7 @@
 				 (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg"))
 			    (and "." (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg") "_" "u")))
 		      (and "reinterpret"
-			   (or "/f32"  
+			   (or "/f32"
 			       "_f32")))))) ;;spec#884 syntax
 
        ;; i64 only
@@ -89,7 +91,7 @@
 			    (and "." (or "add" "sub" "and" "or" "xor" "xchg" "cmpxchg") "_" "u")))
 		       (and "extend" "_"
 			    (or
-			     (and (or "s" "u") "/" "i32") 
+			     (and (or "s" "u") "/" "i32")
 			     (and "i32_" (or "s" "u")))) ;; spec#884 syntax
 		       (and "reinterpret"
 			    (or "/f64" "_f64"))))))
@@ -120,7 +122,7 @@
 		  (and "ge" "_" (or "s" "u"))
 		  (and "trunc" "_" (or
 				    (and (or "s" "u") (optional ":sat")
-					 "/" (or "f32" "f64"))   ; current syntax 
+					 "/" (or "f32" "f64"))   ; current syntax
 				    (and (optional "sat_")
 					 (or "f32" "f64") "_" (or "s" "u")))))) ; spec/#884 syntax
 	;; f32 only
@@ -129,7 +131,7 @@
 	      (and "x4" "." "convert" "_"
 		   (or
 		    (and (or "s" "u") "/" "i32x4")
-		    (and "i32x4" "_" (or "s" "u"))))	      
+		    (and "i32x4" "_" (or "s" "u"))))
 	      (and "." (or
 			(and "demote"
 			     (or "/" "_") ;; current + spec#884 syntax
@@ -182,12 +184,15 @@
 		       (or
 			(and (or "s" "u") "/" (or "i32" "i64"))   ;; current syntax
 			(and (or "i32" "i64") "_" (or "s" "u"))))))) ;; spec#884 syntax
-      eow))))
+      eow)))
+  "Supported numerical instructions in core.
+Includes new syntax per WebAssembly/spec#884, along with SIMD and threading extensions.")
+  
       
 
 		  
 
-(defvar wat-folded-instr-regex
+(defconst wat-folded-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -199,11 +204,12 @@
 	 "then"
 	 "else"
 	 "end")
-	eow))))
+	eow)))
+  "Supported folded instructions in core.")
 
 
 
-(defvar wat-control-instr-regex
+(defconst wat-control-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -217,9 +223,12 @@
 	 "return"
 	 "call_indirect"
 	 "call")
-	eow))))
+	eow)))
+  "Supported control instructions in core.")
 
-(defvar wat-var-instr-regex
+
+
+(defconst wat-var-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -231,45 +240,65 @@
 	  "_"
 	  (or "global" "local"))
 	 
-	 ;; spec#884 
+	 ;; spec#884
 	 (and
 	  (or "global" "local")
 	  "."
 	  (or "tee" (and (or "g" "s") "et")))
-	eow)))))
+	 eow))))
+  "Supported variable instructions in core.
+Includes revised syntax per WebAssembly/spec/#884.")
 
-(defvar wat-par-instr-regex
+
+
+(defconst wat-par-instr-regex
   (eval-when-compile
     (rx
-       (and (or "drop" "select") eow))))
+     (and (or "drop" "select") eow)))
+  "Supported parametric instructures in core.")
 
-(defvar wat-ident-regex
+
+
+(defconst wat-ident-regex
       "$[0-9a-zA-Z!#$%'*+-./:<=>\?@^_`|~]+")
 
-(defvar wat-func-type-regex
-  (eval-when-compile
-    (rx (and bow (or "param" "result") eow))))
 
-(defvar wat-table-type-regex
+
+(defconst wat-func-type-regex
+  (eval-when-compile
+    (rx (and bow (or "param" "result") eow)))
+  "Supported function types in core.")
+
+
+
+(defconst wat-table-type-regex
   (eval-when-compile
     (rx
      (and bow
 	  (or
 	   "anyfunc"
-	   "funcref")			; spec#884
-	  eow))))
+	   "funcref") ; spec#884
+	  eow)))
+  "Supported table type instructions in core.")
 
-(defvar wat-global-type-regex
-      (eval-when-compile (rx (and bow "mut" eow))))
 
-(defvar wat-val-type-regex
+(defconst wat-global-type-regex
+  (eval-when-compile (rx (and bow "mut" eow)))
+  "Supported global type instructions in core.")
+
+
+
+(defconst wat-val-type-regex
   (eval-when-compile
     (rx (and
 	space
 	 (or "i32" "i64" "f32" "f64")
-	 eow))))
+	 eow)))
+  "Supports value type instructions in core.")
 
-(defvar wat-keyword-regex
+
+
+(defconst wat-keyword-regex
   (eval-when-compile
     (rx
      (and
@@ -288,9 +317,12 @@
        "elem"
        "data"
        "module")
-      eow))))
+      eow)))
+  "Supported keywords in core.")
 
-(defvar wat-wast-regex
+
+
+(defconst wat-wast-regex
   (eval-when-compile
     (rx
      (and
@@ -315,8 +347,11 @@
        "meta:"
        "input"
        "output")
-      eow))))
-  
+      eow)))
+  "Supported keywords in .wast extension.")
+
+
+
 (provide 'wat-mode-font-lock)
 
-;; wat-mode-font-lock.el ends here
+;;; wat-mode-font-lock.el ends here

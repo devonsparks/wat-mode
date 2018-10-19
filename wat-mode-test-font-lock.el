@@ -16,6 +16,8 @@
 ;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 
+;;; Code:
+
 (require 'ert)
 (require 'wat-mode-font-lock)
 
@@ -23,33 +25,34 @@
   (let ((regex wat-mem-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
-	    '("i32.load "
-	      "i64.load "
-	      "f32.load "
-	      "f64.load "
-	      "i32.load8_s "
-	      "i32.load8_u "
-	      "i32.load16_s "
-	      "i32.load16_u "
-	      "i64.load8_s "
-	      "i64.load8_u "
-	      "i64.load16_s "
-	      "i64.load16_u "
-	      "i64.load32_s "
-	      "i64.load32_u "
-	      "i32.store "
-	      "i64.store "
-	      "f32.store "
-	      "f64.store "	 
-	      "i32.store8 "
-	      "i32.store16 "
-	      "i64.store8 "
-	      "i64.store16 "
-	      "i64.store32 "
+	    '("i32.load"
+	      "i64.load"
+	      "f32.load"
+	      "f64.load"
+	      "i32.load8_s"
+	      "i32.load8_u"
+	      "i32.load16_s"
+	      "i32.load16_u"
+	      "i64.load8_s"
+	      "i64.load8_u"
+	      "i64.load16_s"
+	      "i64.load16_u"
+	      "i64.load32_s"
+	      "i64.load32_u"
+	      "i32.store"
+	      "i64.store"
+	      "f32.store"
+	      "f64.store"
+	      "i32.store8"
+	      "i32.store16"
+	      "i64.store8"
+	      "i64.store16"
+	      "i64.store32"
 	      "offset="
 	      "align="
 	      "memory.grow"
-	      "memory.size"))))
+	      "memory.size")))
+  "Test of supported memory instructions in core.")
 
 
 (ert-deftest wat-match-mem-instr-no-test ()
@@ -64,7 +67,8 @@
 	      "f64.store16 "
 	      "f64.store32 "
 	      "align"
-	      "grow"))))
+	      "grow")))
+  "Sample of malformed memory instructions in core.")
 
 
 (ert-deftest wat-match-ident-yes-test ()
@@ -73,7 +77,9 @@
 	      (should (string-match regex str)))
 	    '("$NEXT"
 	      "$9ds"
-	      "$<=>"))))
+	      "$<=>")))
+  "Sample of supported indentifiers in core.")
+
 
 (ert-deftest wat-match-ident-no-test ()
   (let ((regex wat-ident-regex))
@@ -81,7 +87,8 @@
 	      (should-not (string-match regex str)))
 	    '("_bad"
 	      "maL"
-	      "$"))))
+	      "$")))
+  "Sample of unsupported identifiers in core.")
 
 
 (ert-deftest wat-match-num-yes-test ()
@@ -298,7 +305,7 @@
 	      "i64.atomic.rmw8.sub_u"
 	      "i64.atomic.rmw16_u.sub"
 	      "i64.atomic.rmw16.sub_u"
-	      "i64.atomic.rmw32_u.sub" 
+	      "i64.atomic.rmw32_u.sub"
 	      "i64.atomic.rmw32.sub_u"
 	      "i32.atomic.rmw8_u.and"
 	      "i32.atomic.rmw8.and_u"
@@ -350,7 +357,10 @@
 	      "i64.atomic.rmw16.cmpxchg_u"
 	      "i64.atomic.rmw32_u.cmpxchg"
 	      "i64.atomic.rmw32.cmpxchg_u"
-	      ))))
+	      )))
+  "Sample of supported numerical instructions, including those
+   for SIMD and threading extensions.")
+
 
 (ert-deftest wat-match-num-no-test ()
   (let ((regex wat-num-instr-regex))
@@ -374,8 +384,10 @@
 	      "i32.atomic.rmw32_s.add"
 	      "i32.atomic.rmw32.add_s"
 	      "i64.rmw16_u.add"
-	      "i64.rmw16.add_u"	     
-	      ))))
+	      "i64.rmw16.add_u"
+	      )))
+  "Sample of unsupported numerical instructions, including those
+   for SIMD and threading extensions.")
 
 (ert-deftest wat-match-folded-instr-yes-test ()
   (let ((regex wat-folded-instr-regex))
@@ -386,7 +398,8 @@
 	      "then"
 	      "else"
 	      "end"
-	      "loop"))))
+	      "loop")))
+  "Supported folded instructions in core.")
 
 
 (ert-deftest wat-match-control-instr-yes-test ()
@@ -400,7 +413,8 @@
 	      "br_table"
 	      "return"
 	      "call_indirect"
-	      "call"))))
+	      "call")))
+  "Supported control/branching instructions in core.")
 
 
 (ert-deftest wat-match-var-instr-yes-test ()
@@ -412,20 +426,23 @@
       "tee_local"
       "get_global"
       "set_local"
-
+      
       ;; spec#884
       "local.get"
       "local.set"
       "global.get"
       "global.set"
-      ))))
+      )))
+  "Supported variable assignment instructions, including
+  revised names based on WebAssembly/spec#884.")
 
 
 (ert-deftest wat-match-par-instr-yes-test ()
   (let ((regex wat-par-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
-    '("drop" "select"))))
+	    '("drop" "select")))
+  "Supported parametric instructions in core.")
 
 
 (ert-deftest wat-match-func-type-yes-test ()
@@ -433,7 +450,8 @@
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("param"
-	      "result"))))
+	      "result")))
+  "Supported function types in core.")
 
 
 (ert-deftest wat-match-keyword-yes-test ()
@@ -444,8 +462,9 @@
 	      "(module)"
 	      "(import $foo)"
 	      "(export $foo)"
-	      "(global $W (mut i32))"))))
+	      "(global $W (mut i32))")))
+  "Sample of supported keyword instructions in core.")
 
 (provide 'wat-mode-test-font-lock)
 
-;; wat-mode-test-font-lock.el ends here
+;;; wat-mode-test-font-lock.el ends here

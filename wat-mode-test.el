@@ -19,8 +19,8 @@
 
 ;;; Code:
 
-(add-to-list 'load-path
-	     (directory-file-name (file-name-directory load-file-name)))
+;;(add-to-list 'load-path
+;;	     (directory-file-name (file-name-directory load-file-name)))
 
 
 (require 'wat-mode-test-font-lock)

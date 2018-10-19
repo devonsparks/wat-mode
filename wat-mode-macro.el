@@ -22,13 +22,33 @@
 (defconst *wat-macro-tag* "wat-macro"
   "Prefix used to identify all macro expansions.")
 
-(defconst *wat-comment-token* ";;"
-  "wat comment token - used for annotating macro expansions.")
+(defconst *wat-comment-prefix* ";;"
+  "Comment prefix used for annotating expanded `wat-mode' macros.")
 
-(defalias 'wat-output 'pp)
+
+(defalias 'wat-output 'pp
+  "`wat-output' aliases the formatting function for expanded macros.
+
+Its arguments should follow the `pp' convention, e.g.,
+(wat-output object &optional stream)")
+
 
 (defmacro define-wat-macro (name args &rest body)
-    "Extends wat syntax with simple macro expansions."
+    "Extends wat syntax with simple macro expansions ('wat-macros').
+
+NAME: the macro's name (to be referenced in later wat code)
+ARGS: an in-line argument list to the macro.
+BODY: the form to be expanded.
+
+Macros created with `define-wat-macro' are true elisp macros.
+Quasiquote works as you'd expect, e.g.,:
+
+'(@ define-register (name initial-value)
+  (global ,name (mut i32) (i32.const ,initial-value)))'
+
+wat-macros can be evaluated in the current session with `eval-last-sexp'
+and expanded in place by invoking `wat-macro-expand' with point at the
+start of the form."
     (let ((tag (make-symbol *wat-macro-tag*))
 	  (name-string (symbol-name name)))
       `(defmacro ,name ,(append args '(&rest body))
@@ -36,11 +56,16 @@
 
 
 (defalias '@ 'define-wat-macro
-  "@ extends wat syntax to support macro expansions.")
+  "@ is syntactic sugar for `define-wat-macro'.")
 
 
 (defun wat-expand-in-place (&optional forward)
-  "Replace an sexp with its value."
+  "`macroexpand-all' the s-expression at point.
+
+FORWARD: If non-nil, `macroexpand-all' the s-expression following point.
+Otherwise, use s-expression preceding point.
+
+If an error occurs during macro expansion, re-insert the original form."
   (interactive)
   (save-excursion
   (if forward
@@ -56,9 +81,27 @@
 	     (insert (current-kill 0))))))
 
 
-(defun wat-sanitize-1 ()
+(defun wat-strip-wrapper-1 ()
+  "Delete s-expression wrapping `define-wat-macro' expansions.
+
+All wat macros expand to an s-expression starting with `*wat-macro-tag*'.
+
+Example:
+
+\(@ my-macro ()  <body>)
+
+...
+
+\(my-macro) => \(,*wat-macro-tag* \"my-macro\" <body>)
+
+The leading wat-macro is useful for debugging but isn't valid WebAssembly.
+To fix this, `wat-strip-wrapper-1' starts at point, looks for the next
+occurrence  of `*wat-macro-tag*', commenting out the tag and deleting
+the wrapping parens.  So the expanded macro above becomes:
+;; ,*wat-macro-tag* \"my-macro\"
+		     <body>"
   (let* ((label (concat "(" *wat-macro-tag*))
-	 (labelc (length label))	
+	 (labelc (length label))
 	 (pstart (progn
 		   (search-forward label nil nil)
 		   (goto-char (- (point) labelc))
@@ -68,22 +111,24 @@
 		 (point))))
     (goto-char pstart)
     (delete-char labelc)
-    (insert *wat-comment-token*)
+    (insert *wat-comment-prefix*)
     (goto-char (- pend labelc))
     (delete-char 1)
     (goto-char pstart)))
 
 
 (defun wat-strip-wrapper ()
+  "Repeatedly call `wat-strip-wrapper-1', starting at point, until failure."
   (interactive)
-  (save-excursion 
+  (save-excursion
     (condition-case nil
 	(while t
-	  (wat-sanitize-1))
+	  (wat-strip-wrapper-1))
       ('error  (message "Macro expansion complete!")))))
 
 
 (defun wat-remove-escapes ()
+  "Remove escape characters created during macro expansion."
   (interactive)
   (save-excursion
   (while (search-forward "\\" nil t)
@@ -91,6 +136,7 @@
 
 
 (defun wat-macro-expand ()
+  "Perform wat macro expansion on the current buffer."
   (interactive)
   (wat-expand-in-place t)
   (wat-strip-wrapper)

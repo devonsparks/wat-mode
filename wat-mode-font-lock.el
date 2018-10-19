@@ -21,7 +21,7 @@
 
 (require 'rx)
 
-(defconst wat-mem-instr-regex
+(defconst wat-mode-font-lock-mem-instr-regex
       (eval-when-compile
 	(rx
 	 (or
@@ -48,7 +48,7 @@
 
 
 
-(defconst wat-num-instr-regex
+(defconst wat-mode-font-lock-num-instr-regex
   (eval-when-compile
     (rx
      (and
@@ -193,7 +193,7 @@ Includes new syntax per WebAssembly/spec#884, along with SIMD and threading exte
 
 		  
 
-(defconst wat-folded-instr-regex
+(defconst wat-mode-font-lock-folded-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -210,7 +210,7 @@ Includes new syntax per WebAssembly/spec#884, along with SIMD and threading exte
 
 
 
-(defconst wat-control-instr-regex
+(defconst wat-mode-font-lock-control-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -229,7 +229,7 @@ Includes new syntax per WebAssembly/spec#884, along with SIMD and threading exte
 
 
 
-(defconst wat-var-instr-regex
+(defconst wat-mode-font-lock-var-instr-regex
   (eval-when-compile
       (rx
        (and
@@ -252,7 +252,7 @@ Includes revised syntax per WebAssembly/spec/#884.")
 
 
 
-(defconst wat-par-instr-regex
+(defconst wat-mode-font-lock-par-instr-regex
   (eval-when-compile
     (rx
      (and (or "drop" "select") eow)))
@@ -260,19 +260,19 @@ Includes revised syntax per WebAssembly/spec/#884.")
 
 
 
-(defconst wat-ident-regex
+(defconst wat-mode-font-lock-ident-regex
       "$[0-9a-zA-Z!#$%'*+-./:<=>\?@^_`|~]+")
 
 
 
-(defconst wat-func-type-regex
+(defconst wat-mode-font-lock-func-type-regex
   (eval-when-compile
     (rx (and bow (or "param" "result") eow)))
   "Supported function types in core.")
 
 
 
-(defconst wat-table-type-regex
+(defconst wat-mode-font-lock-table-type-regex
   (eval-when-compile
     (rx
      (and bow
@@ -283,13 +283,13 @@ Includes revised syntax per WebAssembly/spec/#884.")
   "Supported table type instructions in core.")
 
 
-(defconst wat-global-type-regex
+(defconst wat-mode-font-lock-global-type-regex
   (eval-when-compile (rx (and bow "mut" eow)))
   "Supported global type instructions in core.")
 
 
 
-(defconst wat-val-type-regex
+(defconst wat-mode-font-lock-val-type-regex
   (eval-when-compile
     (rx (and
 	space
@@ -299,7 +299,7 @@ Includes revised syntax per WebAssembly/spec/#884.")
 
 
 
-(defconst wat-keyword-regex
+(defconst wat-mode-font-lock-keyword-regex
   (eval-when-compile
     (rx
      (and
@@ -323,7 +323,7 @@ Includes revised syntax per WebAssembly/spec/#884.")
 
 
 
-(defconst wat-wast-regex
+(defconst wat-mode-font-lock-wast-regex
   (eval-when-compile
     (rx
      (and

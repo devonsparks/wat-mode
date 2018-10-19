@@ -22,8 +22,8 @@
 (require 'ert)
 (require 'wat-mode-font-lock)
 
-(ert-deftest wat-match-mem-instr-yes-test ()
-  (let ((regex wat-mem-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-mem-instr-yes-test ()
+  (let ((regex wat-mode-font-lock-mem-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("i32.load"
@@ -56,8 +56,8 @@
   "Test of supported memory instructions in core.")
 
 
-(ert-deftest wat-match-mem-instr-no-test ()
-  (let ((regex wat-mem-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-mem-instr-no-test ()
+  (let ((regex wat-mode-font-lock-mem-instr-regex))
     (mapcar (lambda (str)
 	      (should-not (string-match regex str)))
 	    '("i32.load32_u "
@@ -72,8 +72,8 @@
   "Sample of malformed memory instructions in core.")
 
 
-(ert-deftest wat-match-ident-yes-test ()
-  (let ((regex wat-ident-regex))
+(ert-deftest wat-mode-test-font-lock-match-ident-yes-test ()
+  (let ((regex wat-mode-font-lock-ident-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("$NEXT"
@@ -82,8 +82,8 @@
   "Sample of supported indentifiers in core.")
 
 
-(ert-deftest wat-match-ident-no-test ()
-  (let ((regex wat-ident-regex))
+(ert-deftest wat-mode-test-font-lock-match-ident-no-test ()
+  (let ((regex wat-mode-font-lock-ident-regex))
     (mapcar (lambda (str)
 	      (should-not (string-match regex str)))
 	    '("_bad"
@@ -92,8 +92,8 @@
   "Sample of unsupported identifiers in core.")
 
 
-(ert-deftest wat-match-num-yes-test ()
-  (let ((regex wat-num-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-num-yes-test ()
+  (let ((regex wat-mode-font-lock-num-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("i32.const"
@@ -363,8 +363,8 @@
    for SIMD and threading extensions.")
 
 
-(ert-deftest wat-match-num-no-test ()
-  (let ((regex wat-num-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-num-no-test ()
+  (let ((regex wat-mode-font-lock-num-instr-regex))
     (mapcar (lambda (str)
 	      (should-not (string-match regex str)))
 	    '("i32x4.trunc_s/f64x4"
@@ -390,8 +390,8 @@
   "Sample of unsupported numerical instructions, including those
    for SIMD and threading extensions.")
 
-(ert-deftest wat-match-folded-instr-yes-test ()
-  (let ((regex wat-folded-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-folded-instr-yes-test ()
+  (let ((regex wat-mode-font-lock-folded-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("block"
@@ -403,8 +403,8 @@
   "Supported folded instructions in core.")
 
 
-(ert-deftest wat-match-control-instr-yes-test ()
-  (let ((regex wat-control-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-control-instr-yes-test ()
+  (let ((regex wat-mode-font-lock-control-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("unreachable"
@@ -418,8 +418,8 @@
   "Supported control/branching instructions in core.")
 
 
-(ert-deftest wat-match-var-instr-yes-test ()
-  (let ((regex wat-var-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-var-instr-yes-test ()
+  (let ((regex wat-mode-font-lock-var-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
     '("get_local"
@@ -438,16 +438,16 @@
   revised names based on WebAssembly/spec#884.")
 
 
-(ert-deftest wat-match-par-instr-yes-test ()
-  (let ((regex wat-par-instr-regex))
+(ert-deftest wat-mode-test-font-lock-match-par-instr-yes-test ()
+  (let ((regex wat-mode-font-lock-par-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("drop" "select")))
   "Supported parametric instructions in core.")
 
 
-(ert-deftest wat-match-func-type-yes-test ()
-  (let ((regex wat-func-type-regex))
+(ert-deftest wat-mode-test-font-lock-match-func-type-yes-test ()
+  (let ((regex wat-mode-font-lock-func-type-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("param"
@@ -455,8 +455,8 @@
   "Supported function types in core.")
 
 
-(ert-deftest wat-match-keyword-yes-test ()
-  (let ((regex wat-keyword-regex))
+(ert-deftest wat-mode-test-font-lock-match-keyword-yes-test ()
+  (let ((regex wat-mode-font-lock-keyword-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
 	    '("(func)"

@@ -1,7 +1,10 @@
 ;;; wat-mode.el --- A major mode for WebAssembly -*- lexical-binding: t; -*-
 
 ;;  Copyright (C) 2018, Devon Sparks
+;;
+;;  Author: Devon Sparks <devon.sparks@gmail.com>
 ;;  URL: https://github.com/devonsparks/wat-mode
+;;  Version: 1.0
 ;;
 ;;  This program is free software: you can redistribute it and/or modify
 ;;  it under the terms of the GNU General Public License as published by

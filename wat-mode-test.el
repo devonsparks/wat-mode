@@ -1,4 +1,5 @@
-;;
+;;; wat-mode-test.el --- ert entry point for `wat-mode'  -*- lexical-binding: t; -*-
+
 ;;  Copyright (C) 2018, Devon Sparks
 ;;  URL: https://github.com/devonsparks/wat-mode
 ;;

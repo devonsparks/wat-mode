@@ -195,7 +195,7 @@
 	(or
 	 "block"
 	 "loop"
-	 (and (not (any "_")) "if")
+	 "if"
 	 "then"
 	 "else"
 	 "end")

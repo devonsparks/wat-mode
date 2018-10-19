@@ -60,8 +60,8 @@
   (append
    wat-mode-font-lock-keywords-1
    (list
-    (cons wat-folded-instr-regex   'font-lock-builtin-face)
     (cons wat-control-instr-regex  'font-lock-builtin-face)
+    (cons wat-folded-instr-regex   'font-lock-builtin-face)
     (cons wat-var-instr-regex      'font-lock-builtin-face)
     (cons wat-par-instr-regex      'font-lock-builtin-face)
     (cons wat-table-type-regex     'font-lock-type-face)

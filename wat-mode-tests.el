@@ -365,12 +365,12 @@
   (let ((regex wat-folded-instr-regex))
     (mapcar (lambda (str)
 	      (should (string-match regex str)))
-	    '("(block"
-	     ;; "(if"
+	    '("block"
+	      "if"
 	      "then"
 	      "else"
 	      "end"
-	      "(loop"))))
+	      "loop"))))
 
 
 (ert-deftest wat-match-control-instr-yes-test ()

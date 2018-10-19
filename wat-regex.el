@@ -18,29 +18,32 @@
 
 (require 'rx)
 
+
 (defvar wat-mem-instr-regex
       (eval-when-compile
 	(rx
-	 (and
-	  bow
-	  (or
-	   "memory.size"
-	   "memory.grow"
-	   "align="
-	   "offset="
-	   ;; floats
-	   (and "f" (or "32" "64") "."(or "store" "load"))
+	 (or
+	  (and bow (or "align=" "offset="))
+	  
+	  (and bow
+	       (or
+		"memory.size"
+		"memory.grow"
+		;; floats
+		(and "f" (or "32" "64") "."(or "store" "load"))
 
-	   ;; special case for 64-bit integer loads only
-	   (and "i64" "." (or "load32_s" "load32_u" "store32"))
+		;; special case for 64-bit integer loads only
+		(and "i64" "." (or "load32_s" "load32_u" "store32"))
 
-	     ;; integers
-	   (and	      
-	    "i" (or "32" "64") "."
-	    (or
-	     (and "store" (zero-or-one (or "8" "16")))
-	     (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u"))))))
-	    eow)))))
+		;; integers
+		(and	      
+		 "i" (or "32" "64") "."
+		 (or
+		  (and "store" (zero-or-one (or "8" "16")))
+		  (and "load" (zero-or-one (and (or "8" "16") "_" (or "s" "u")))))))
+	       eow)))))
+
+
 
 (defvar wat-num-instr-regex
   (eval-when-compile
@@ -48,9 +51,27 @@
      (and
       bow
       (or
-	"f32.demote/f64"
-	"f64.promote/f32"
-	(and "i32" "." "wrap/i64")
+
+	;; i32 only
+	(and "i32" "."
+	     (or
+	      "wrap/i64" 
+	      "wrap_i64"  ;; spec#884 syntax
+	      (and "reinterpret"
+		   (or "/f32"  
+		       "_f32")))) ;;spec#884 syntax
+
+	;; i64 only
+	(and "i64" "."
+	     (or
+	      (and "extend" "_"
+		  (or
+		   (and (or "s" "u") "/" "i32") 
+		   (and "i32_" (or "s" "u")))) ;; spec#884 syntax
+	      (and "reinterpret"
+		   (or "/f64" "_f64"))))
+
+	;; i32 and i64
 	(and (or "i32" "i64") "."
 	     (or "const"
 		  "clz"
@@ -74,9 +95,32 @@
 		  (and "gt" "_" (or "s" "u"))
 		  (and "le" "_" (or "s" "u"))
 		  (and "ge" "_" (or "s" "u"))
-		  (and "trunc" "_" (or "s" "u") "/" (or "f32" "f64"))
-		  (and "extend" "_" (or "s" "u") "/" "i32")
-		  (and "reinterpret" "/" (or "f32" "f64"))))
+		  (and "trunc" "_" (or
+				    (and (or "s" "u") (optional ":sat")
+					 "/" (or "f32" "f64"))   ; current syntax 
+				    (and (optional "sat_")
+					 (or "f32" "f64") "_" (or "s" "u")))))) ; spec/#884 syntax
+	;; f32 only
+	(and "f32" "."
+	     (or
+	      (and "demote"
+		   (or "/" "_") ;; current + spec#884 syntax
+		   "f64")
+	      (and "reinterpret"
+		   (or "/" "_") ;; current + spec#884 syntax
+		       "i32")))
+
+	;; f64 only
+	(and "f64" "."
+	     (or
+	      (and "promote"
+		   (or "/" "_") ;; current + spec#884 syntax
+		   "f32")
+	      (and "reinterpret"
+		   (or "/" "_") ;; current + spec#884 syntax
+		   "i64")))
+	
+	;; both f32 and f64
 	(and (or "f32" "f64") "."
 	     (or  "const"
 		  "abs"
@@ -99,9 +143,11 @@
 		  "gt"
 		  "le"
 		  "ge"
-		  (and "convert" "_" (or "s" "u") "/" (or "i32" "i64"))
-		  (and "reinterpret" "/" (or "i32" "i64")))))
-      eow))))
+		  (and "convert" "_"
+		       (or
+			(and (or "s" "u") "/" (or "i32" "i64"))   ;; current syntax
+			(and (or "i32" "i64") "_" (or "s" "u")))))) ;; spec#884 syntax
+      eow)))))
 
 		  
 
@@ -142,11 +188,19 @@
       (rx
        (and
 	bow
-	(and
-	 (or "tee" (and (or "g" "s") "et"))
-	 "_"
-	 (or "global" "local"))
-	eow))))
+	(or
+	 ;; current syntax
+	 (and
+	  (or "tee" (and (or "g" "s") "et"))
+	  "_"
+	  (or "global" "local"))
+	 
+	 ;; spec#884 
+	 (and
+	  (or "global" "local")
+	  "."
+	  (or "tee" (and (or "g" "s") "et")))
+	eow)))))
 
 (defvar wat-par-instr-regex
   (eval-when-compile
@@ -161,7 +215,13 @@
     (rx (and bow (or "param" "result") eow))))
 
 (defvar wat-table-type-regex
-  (eval-when-compile (rx (and bow "anyfunc" eow))))
+  (eval-when-compile
+    (rx
+     (and bow
+	  (or
+	   "anyfunc"
+	   "funcref")			; spec#884
+	  eow))))
 
 (defvar wat-global-type-regex
       (eval-when-compile (rx (and bow "mut" eow))))
@@ -193,20 +253,34 @@
        "data"
        "module")
       eow))))
-     ;; (or
-     ;;  (and  "type" eow)
-     ;;  (and  "func" eow)
-     ;;  (and  "table" eow)
-     ;;  (and  "memory" eow)
-     ;;  (and  "global" eow)
-     ;;  (and  "local" eow)
-     ;;  (and  "import" eow)
-     ;;  (and  "export" eow)
-     ;;  (and  "start" eow)
-     ;;  (and  "offset" eow)
-     ;;  (and  "elem" eow)
-     ;;  (and  "data" eow)
-     ;;  (and  "module" eow)))))
+
+(defvar wat-wast-regex
+  (eval-when-compile
+    (rx
+     (and
+      bow
+      (or
+       "script:"
+       "register"
+       "module:"
+       "binary"
+       "quote"
+       "action:"
+       "invoke"
+       "get"
+       "assertion:"
+       "assert_return"
+       "assert_return_canonical_nan"
+       "assert_return_arithmetic_nan"
+       "assert_trap"
+       "assert_malformed"
+       "assert_invalid"
+       "assert_unlinkable"
+       "meta:"
+       "input"
+       "output")
+      eow))))
+  
 (provide 'wat-regex)
 
 ;; wat-regex.el ends here

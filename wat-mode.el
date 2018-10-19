@@ -18,7 +18,6 @@
 
 ;; * TODO
 
-;; - wast support
 ;; - updated names
 ;; - texinfo documentation
 ;; - docstrings
@@ -52,7 +51,9 @@
 (defconst wat-mode-font-lock-keywords-1
   (list
    (cons wat-keyword-regex        'font-lock-keyword-face))
-  "wat-mode highlight level 1 oof 3 -- just type keywords")
+  "`wat-mode' highlight level 1 oof 4
+  
+     Highlights core wat type keywords only.")
 
 
 (defconst wat-mode-font-lock-keywords-2
@@ -67,7 +68,9 @@
     (cons wat-func-type-regex      'font-lock-type-face)
     (cons wat-global-type-regex    'font-lock-type-face)
     (cons wat-val-type-regex       'font-lock-type-face)))
-   "`wat-mode' highlighting level level 2 of 3 -- missing number and memory instructions")
+   "`wat-mode' highlighting level 2 of 4 
+     
+     Highlights all core keywords minus numerical and memory instructions.")
 
 
 (defconst wat-mode-font-lock-keywords-3
@@ -77,13 +80,20 @@
     (cons wat-ident-regex          'font-lock-variable-name-face)
     (cons wat-mem-instr-regex      'font-lock-builtin-face)
     (cons wat-num-instr-regex      'font-lock-builtin-face)))
-  "`wat-mode' highlighting level 3 of 3 -- all core keywords")
+  "`wat-mode' highlighting level 3 of 4
+   
+    Highlights all core keywords.")
 
 
-(defvar wat-mode-font-lock-keywords
-  wat-mode-font-lock-keywords-3
-  "Default highlight level for `wat-mode'")
-       
+(defconst wat-mode-font-lock-keywords-4
+  (append
+   wat-mode-font-lock-keywords-3
+   (list
+    (cons wat-wast-regex            'font-lock-warning-face)))
+  "`wat-mode' highlighting level 4 of 4
+
+   Highlights all core keywords plus .wast extensions.")
+
 
 (defvar wat-mode-map
   (let ((map (make-sparse-keymap)))
@@ -97,7 +107,11 @@
 (define-derived-mode wat-mode lisp-mode "wat-mode"
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
-  (set (make-local-variable 'font-lock-defaults) '(wat-mode-font-lock-keywords))
+  (set (make-local-variable 'wat-mode-font-lock-keywords)
+       wat-mode-font-lock-keywords-4)
+  (set (make-local-variable 'font-lock-defaults)
+       '(wat-mode-font-lock-keywords))
+
   (set-syntax-table wat-mode-syntax-table)
   "`wat-mode', an Emacs major mode for editing WebAssembly's text format")
 

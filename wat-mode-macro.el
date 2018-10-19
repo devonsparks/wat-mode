@@ -45,8 +45,10 @@
       (backward-kill-sexp))
   (condition-case nil
       (let ((exp (read (current-kill 0))))
-	(wat-output (macroexpand-all exp)
-		 (current-buffer)))  
+	(progn
+	  (wat-output (macroexpand-all exp)
+		      (current-buffer))))
+	 ;; (indent-region (point-min) (point-max) nil)))
       ('error (message "Invalid expression")
 	     (insert (current-kill 0))))))
 
@@ -91,6 +93,6 @@
   (wat-strip-wrapper)
   (wat-remove-escapes))
 
-(provide 'wat-macro)
+(provide 'wat-mode-macro)
 
-;; wat-macro.el ends here
+;; wat-mode-macro.el ends here

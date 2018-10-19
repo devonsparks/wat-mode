@@ -26,8 +26,8 @@
 ;; - melpa package
 
 
-(require 'wat-regex)
-(require 'wat-macro)
+(require 'wat-mode-font-lock)
+(require 'wat-mode-macro)
 
 
 (defvar wat-mode-syntax-table

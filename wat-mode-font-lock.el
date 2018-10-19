@@ -317,6 +317,6 @@
        "output")
       eow))))
   
-(provide 'wat-regex)
+(provide 'wat-mode-font-lock)
 
-;; wat-regex.el ends here
+;; wat-mode-font-lock.el ends here

@@ -1,8 +1,24 @@
+;;
+;;  Copyright (C) 2018, Devon Sparks
+;;  URL: https://github.com/devonsparks/wat-mode
+;;
+;;  This program is free software: you can redistribute it and/or modify
+;;  it under the terms of the GNU General Public License as published by
+;;  the Free Software Foundation, either version 3 of the License, or
+;;  (at your option) any later version.
+
+;;  This program is distributed in the hope that it will be useful,
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;  GNU General Public License for more details.
+
+;;  You should have received a copy of the GNU General Public License
+;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;;
+
 (require 'ert)
-(load "/home/devon/repos/wat-mode/wat-mode.el")
+(require 'wat-mode-font-lock)
 
-
-			     
 (ert-deftest wat-match-mem-instr-yes-test ()
   (let ((regex wat-mem-instr-regex))
     (mapcar (lambda (str)
@@ -430,3 +446,6 @@
 	      "(export $foo)"
 	      "(global $W (mut i32))"))))
 
+(provide 'wat-mode-test-font-lock)
+
+;; wat-mode-test-font-lock.el ends here

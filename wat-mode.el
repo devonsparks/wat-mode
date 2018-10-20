@@ -27,6 +27,9 @@
 
 
 
+(defvaralias 'wat-mode-indent-offset 'lisp-indent-offset
+	"Make `wat-mode-indent-offset' for the underlying lisp indentation behavior.")
+
 (defvar wat-mode-syntax-table
   (let ((table (make-syntax-table lisp-mode-syntax-table)))
     ;; update identifier character class
@@ -95,8 +98,8 @@
 (defvar wat-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map lisp-mode-shared-map)
-    (define-key map (kbd "C-c 1")   'wat-macro-expand)
-    (define-key map (kbd "RET") 'newline-and-indent)
+    (define-key map (kbd "C-c 1")   'wat-mode-macro-expand)
+    (define-key map (kbd "RET")     'newline-and-indent)
     map)
   "Keymap for `wat-mode', derived from `lisp-mode'.")
 

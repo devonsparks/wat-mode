@@ -135,7 +135,7 @@ the wrapping parens.  So the expanded macro above becomes:
        (replace-match "" t nil))))
 
 
-(defun wat-macro-expand ()
+(defun wat-mode-macro-expand ()
   "Perform wat macro expansion on the current buffer."
   (interactive)
   (wat-expand-in-place t)

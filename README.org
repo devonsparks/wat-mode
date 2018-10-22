@@ -16,7 +16,7 @@
 
 * Installation
   Put the contents of this directory somewhere on your load-path, i.e.,:
-  #+begin_src: emacs-lisp
+n  #+begin_src: emacs-lisp
   (add-to-list 'load-path "<path>/<to>/<wat-mode>/")
   ...
   (require 'wat-mode)
@@ -38,14 +38,14 @@
 ** Syntax Highlighting 
    /wat-mode/ supports syntax highlighting for all core
    WebAssembly keywords. Highlighting support comes in four levels with increasing coverage:
-   1. ~wat-mode-font-lock-keywords-1~: Only top-level keyords (e.g.,
+   1. *wat-mode-font-lock-keywords-1*: Only top-level keyords (e.g.,
      /module/, /table/, /func/, etc).
-   2. ~wat-mode-font-lock-keywords-2~: level (1) plus support for all data
+   2. *wat-mode-font-lock-keywords-2*: level (1) plus support for all data
       types and  non-memory or numerical instructions.
-   3. ~wat-mode-font-lock-keywords-3~: level (2) plus support for
+   3. *wat-mode-font-lock-keywords-3*: level (2) plus support for
       identifiers and both memory and numerical instructions. This
       includes supports for the SIMD and threading extensions. 
-   4. ~wat-mode-font-lock-keywords-4~: level (3) plus support for .wast
+   4. *wat-mode-font-lock-keywords-4*: level (3) plus support for .wast
       keywords.
  
    The active highlighting level is bound to
@@ -119,12 +119,6 @@
 
 * License
   /wat-mode/ is licensed under GPLv3. See LICENSE.
-
-
-
-
-
-
 
 
 

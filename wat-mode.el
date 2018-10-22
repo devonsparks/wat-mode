@@ -28,7 +28,7 @@
 
 
 (defvaralias 'wat-mode-indent-offset 'lisp-indent-offset
-	"Make `wat-mode-indent-offset' for the underlying lisp indentation behavior.")
+	"Make `wat-mode-indent-offset' alias the underlying lisp indentation behavior.")
 
 (defvar wat-mode-syntax-table
   (let ((table (make-syntax-table lisp-mode-syntax-table)))
@@ -46,6 +46,7 @@
     (modify-syntax-entry ?\n ">b" table)
     table)
   "Syntax table for `wat-mode'.")
+
 
 
 (defconst wat-mode-font-lock-keywords-1
@@ -95,6 +96,10 @@
    Highlights all core keywords plus .wast extensions.")
 
 
+(defcustom wat-mode-font-lock-keywords 'wat-mode-font-lock-keywords-4
+  "Active font lock level for `wat-mode'.")
+
+
 (defvar wat-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map lisp-mode-shared-map)
@@ -107,11 +112,8 @@
 (define-derived-mode wat-mode lisp-mode "wat-mode"
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
-  (set (make-local-variable 'wat-mode-font-lock-keywords)
-       wat-mode-font-lock-keywords-4)
   (set (make-local-variable 'font-lock-defaults)
        '(wat-mode-font-lock-keywords))
-
   (set-syntax-table wat-mode-syntax-table)
   "`wat-mode', an Emacs major mode for editing WebAssembly's text format")
 

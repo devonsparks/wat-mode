@@ -7,72 +7,67 @@
 * Summary
   /wat-mode/ is an Emacs major mode for [[https://webassembly.github.io/spec/core/bikeshed/index.html#text-format%E2%91%A0][WebAssembly's text format]] based on
   /lisp-mode/. It currently supports:
-    + syntax highlighting for all core WebAssembly keywords including .wast, SIMD, and threading extensions. 
+    + syntax highlighting for all core WebAssembly keywords including .wast, SIMD, and threading extensions
     + s-expression indentation (from /lisp-mode/)
-    + experimental macro assembler support
+    + an experimental macro assembler
 
   /wat-mode/ can be helpful to those writing WebAssembly by hand. It pairs well
   with the [[https://github.com/WebAssembly/wabt][WebAssembly Binary Toolkit]].
 
 * Installation
-  Put all wat-mode*.el files on your load-path, e.g.,
-  ~(add-to-list 'load-path "<path>/<to>/<wat-mode>/")~
+  Put the contents of this directory somewhere on your load-path, i.e.,:
+  #+begin_src: emacs-lisp
+  (add-to-list 'load-path "<path>/<to>/<wat-mode>/")
+  ...
+  (require 'wat-mode)
+  #+end_src
   
-  Then, ~(require 'wat-mode)~. Visiting files with .wat or .wast extension will automatically activate /wat-mode/.
-
   The intent is to distribute /wat-mode/ via MELPA after a bit more field testing.
 
 * Notes
-  To start using /wat-mode/, simply visit any file with a .wat or .wast file extension. 
+  To start using /wat-mode/, visit any file with a .wat or .wast file extension. 
 
 ** Indentation 
    /wat-mode/ inherits the default indentation behavior of
    /lisp-mode/. If you'd like to change it, you can 
    ~set-variable RET wat-mode-indent-offset RET value
-   RET~. wat-mode-indent-offset is bound to ~lisp-indent-offset~ under
+   RET~. ~wat-mode-indent-offset~ is bound to ~lisp-indent-offset~ under
    the hood and its behavior is identical. See 
    [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Indent.html][Customizing Lisp Indentation]] of the Emacs Manual for details.
 
 ** Syntax Highlighting 
-   /wat-mode/ attempts to support syntax highlighting for all core
-   WebAssembly keywords. Highlighting support is currentl provided in
-   four separate modes with increasing coverage:
+   /wat-mode/ supports syntax highlighting for all core
+   WebAssembly keywords. Highlighting support comes in four levels with increasing coverage:
    1. ~wat-mode-font-lock-keywords-1~: Only top-level keyords (e.g.,
      /module/, /table/, /func/, etc).
-   2. ~wat-mode-font-lock-keywords-2~: mode (1) plus support for all data
+   2. ~wat-mode-font-lock-keywords-2~: level (1) plus support for all data
       types and  non-memory or numerical instructions.
-   3. ~wat-mode-font-lock-keywords-3~: mode (2) plus support for
+   3. ~wat-mode-font-lock-keywords-3~: level (2) plus support for
       identifiers and both memory and numerical instructions. This
       includes supports for the SIMD and threading extensions. 
-   4. ~wat-mode-font-lock-keywords-4~: mode (3) plus support for .wast
+   4. ~wat-mode-font-lock-keywords-4~: level (3) plus support for .wast
       keywords.
  
-   The active mode is bound per-buffer to
-   ~wat-mode-font-lock-keywords~. ~wat-mode-font-lock-keywords-4~ is used
-   by default.
+   The active highlighting level is bound to
+   ~wat-mode-font-lock-keywords~.  ~wat-mode-font-lock-keywords-4~ is
+   used by default.
 
 ** Experimental Macro Assembler
-   You don't have to write much WebAssembly by hand to be in want of a
-   macro assembler. Given that the elisp has macros already, it seemed
-   natural to piggyback off the host environment. Below is a short
-   description of the current macro assembler behavior. Expect this to
-   change, or be removed entirely if it turns out to be a Bad Idea.
-
    /wat-mode/ introduces a single new keyword to WebAssembly syntax:
    ~@~ (pronounced "w-at"). ~@~ allows the definition of macros
-   directing in wat files that get expanded by the elisp runtime.
+   by leveraging the elisp runtime.
 
-   For example, say you're writing an emulator for a particular
-   register machine, and you'd like to have mnemonics to define and
-   operate on the registers beyond WebAssembly instructions. In
-   /wat-mode/, you might make a register constructor like
+   Say you're writing an emulator for a particular register
+   machine. You'd like to have shorthand for defining and operating on
+   the virtual machine registers. In /wat-mode/, you might make a
+   register constructor like
 
-#+begin_src: emacs-lisp 
+#+begin_src: emacs-lisp
    (@ define-register (name initial-value)
      (global ,name (mut i32) (i32.const ,initial-value)))
 #+end_src
 
-   and then define simple operations on it:
+   and then define register operations:
 
 #+begin_src: emacs-lisp
 (@ op-reg (reg value op)
@@ -85,28 +80,38 @@
   (op-reg ,reg ,value i32.sub))
 #+end_src
 
-   Placing these definitions in their a file (that ~(require
-   'wat-mode)~) and/or loading into the active session makes them
-   available for macro expansion. 
+   You could define these macros immediately using ~eval-last-sexp~
+   (~C-x C-e~) or write them to a file that ~(require 'wat-mode)~.
 
-   Macros can be expanded interactively by placing /point/ at the
-   start of the macro form and invoking
-   ~wat-mode-macro-expand~ (bound to ~C-c 1~). 
+   Once defined and loaded, macros can be used like normal
+   instructions in .wat files. 
+
+#+begin_src: emacs-lisp
+(define-register $W 0)
+
+...
+
+(func $do-add
+   (reg.add $W 10))
+#+end_src
+
+   You can evaluate a macro interactively by placing /point/ at the
+   start of the macro form and invoking  ~wat-mode-macro-expand~ (~C-c 1~). 
    
    The expanded definition includes annotating information on the macro 
    that produced it -- a primitive aid to debugging until something
-   better  is written. Undoing (~C-x u~) the operation will return the
-   macro to its unevalated form.
-
-   {demo}
+   better is written. Undoing (~C-x u~) the operation will return the
+   macro to its unevaluated form.
 
    Interactive macro expansion is useful during program
    development. It can also be run in batch:
 
-   ~emacs -batch my-module.wat -l wat-mode -f save-buffer~
+   ~emacs -batch -L . -l ~/.emacs -l $(ROOT)/demo/regm.el $(ROOT)/demo/reg.wat -f wat-mode-macro-expand -f save-buffer~
 
-   The expanded macro will be saved back to /my-module.wat/ with the
-   original module backuped up to /my-module.wat~/.
+   The expanded macro will be saved back to =$(ROOT)/demo/reg.wat= with the
+   original module saved to =$(ROOT)/demo/reg.wat~=. 
+
+   Expect macro support to evolve or be removed entirely if it turns out to be a Bad Idea.
    
 * Contributing
    I made /wat-mode/ for my own use. There's loads or room for improvement. Have

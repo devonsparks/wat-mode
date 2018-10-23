@@ -16,7 +16,7 @@
 
 * Installation
   Put the contents of this directory somewhere on your load-path, i.e.,:
-n  #+begin_src: emacs-lisp
+  #+begin_src: emacs-lisp
   (add-to-list 'load-path "<path>/<to>/<wat-mode>/")
   ...
   (require 'wat-mode)
@@ -103,6 +103,8 @@ n  #+begin_src: emacs-lisp
    better is written. Undoing (~C-x u~) the operation will return the
    macro to its unevaluated form.
 
+   [[./doc/wat-mode-macro.gif]]
+
    Interactive macro expansion is useful during program
    development. It can also be run in batch:
 
@@ -111,6 +113,7 @@ n  #+begin_src: emacs-lisp
    The expanded macro will be saved back to =$(ROOT)/demo/reg.wat= with the
    original module saved to =$(ROOT)/demo/reg.wat~=. 
 
+** A Word of Caution
    Expect macro support to evolve or be removed entirely if it turns out to be a Bad Idea.
    
 * Contributing
@@ -119,8 +122,6 @@ n  #+begin_src: emacs-lisp
 
 * License
   /wat-mode/ is licensed under GPLv3. See LICENSE.
-
-
 
 
   

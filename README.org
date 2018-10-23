@@ -1,5 +1,5 @@
 #+TITLE: wat-mode
-#+SUBTITLE: Emacs macro assembling and editing support for WebAssembly's text format 
+#+SUBTITLE: An Emacs major mode for WebAssembly's text format 
 #+AUTHOR: Devon Sparks
 #+STARTUP: showeverything
 
@@ -22,10 +22,10 @@
   (require 'wat-mode)
   #+end_src
   
-  The intent is to distribute /wat-mode/ via MELPA after a bit more field testing.
+  The intent is to distribute /wat-mode/ via MELPA after a bit more testing.
 
-* Notes
-  To start using /wat-mode/, visit any file with a .wat or .wast file extension. 
+* Usage
+  To use /wat-mode/, visit any file with a .wat or .wast file extension. 
 
 ** Indentation 
    /wat-mode/ inherits the default indentation behavior of
@@ -41,10 +41,10 @@
    1. *wat-mode-font-lock-keywords-1*: Only top-level keyords (e.g.,
      /module/, /table/, /func/, etc).
    2. *wat-mode-font-lock-keywords-2*: level (1) plus support for all data
-      types and  non-memory or numerical instructions.
+      types and instructions excluding memory and numerical instructions.
    3. *wat-mode-font-lock-keywords-3*: level (2) plus support for
       identifiers and both memory and numerical instructions. This
-      includes supports for the SIMD and threading extensions. 
+      includes support for the SIMD and threading extensions. 
    4. *wat-mode-font-lock-keywords-4*: level (3) plus support for .wast
       keywords.
  
@@ -80,11 +80,12 @@
   (op-reg ,reg ,value i32.sub))
 #+end_src
 
-   You could define these macros immediately using ~eval-last-sexp~
-   (~C-x C-e~) or write them to a file that ~(require 'wat-mode)~.
+   You could define these macros interactively using ~eval-last-sexp~
+   (~C-x C-e~) or define them in a separate file to be loaded with
+   before your .wat files.
 
-   Once defined and loaded, macros can be used like normal
-   instructions in .wat files. 
+   Once defined and loaded, macros can be used like folded
+   instructions in standard .wat files. 
 
 #+begin_src: emacs-lisp
 (define-register $W 0)
@@ -92,7 +93,7 @@
 ...
 
 (func $do-add
-   (reg.add $W 10))
+   (reg.add $W 2))
 #+end_src
 
    You can evaluate a macro interactively by placing /point/ at the
@@ -100,12 +101,12 @@
    
    The expanded definition includes annotating information on the macro 
    that produced it -- a primitive aid to debugging until something
-   better is written. Undoing (~C-x u~) the operation will return the
+   better is written. Undoing the operation (~C-x u~) will return the
    macro to its unevaluated form.
 
    [[./doc/wat-mode-macro.gif]]
 
-   Interactive macro expansion is useful during program
+   Macro expansion is useful during program
    development. It can also be run in batch:
 
    ~emacs -batch -L . -l ~/.emacs -l $(ROOT)/demo/regm.el $(ROOT)/demo/reg.wat -f wat-mode-macro-expand -f save-buffer~
@@ -113,7 +114,7 @@
    The expanded macro will be saved back to =$(ROOT)/demo/reg.wat= with the
    original module saved to =$(ROOT)/demo/reg.wat~=. 
 
-** A Word of Caution
+*** A Word of Caution
    Expect macro support to evolve or be removed entirely if it turns out to be a Bad Idea.
    
 * Contributing

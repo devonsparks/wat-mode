@@ -28,16 +28,16 @@
 
 
 (defvaralias 'wat-mode-indent-offset 'lisp-indent-offset
-	"Make `wat-mode-indent-offset' alias the underlying lisp indentation behavior.")
+    "Make `wat-mode-indent-offset' alias the underlying lisp indentation behavior.")
 
 (defvar wat-mode-syntax-table
   (let ((table (make-syntax-table lisp-mode-syntax-table)))
     ;; update identifier character class
     ;; to support word jumps
     (mapc #'(lambda (c)
-	      (modify-syntax-entry c "w" table))
-	  '(?! ?# ?$ ?% ?\' ?* ?+ ?- ?. ?\/ ?:
-	    ?< ?= ?> ?\\ ?? ?@ ?^ ?_ ?\` ?| ?~))
+          (modify-syntax-entry c "w" table))
+      '(?! ?# ?$ ?% ?\' ?* ?+ ?- ?. ?\/ ?:
+        ?< ?= ?> ?\\ ?? ?@ ?^ ?_ ?\` ?| ?~))
 
     ;; enable wat block comments
     (modify-syntax-entry ?\(  "()1nb" table)
@@ -53,7 +53,7 @@
   (list
    (cons wat-mode-font-lock-keyword-regex        'font-lock-keyword-face))
   "`wat-mode' highlight level 1 oof 4.
-  
+
     Highlights core wat type keywords only.")
 
 
@@ -70,7 +70,7 @@
     (cons wat-mode-font-lock-global-type-regex    'font-lock-type-face)
     (cons wat-mode-font-lock-val-type-regex       'font-lock-type-face)))
    "`wat-mode' highlighting level 2 of 4.
-     
+
      Highlights all core keywords minus numerical and memory instructions.")
 
 
@@ -82,7 +82,7 @@
     (cons wat-mode-font-lock-mem-instr-regex      'font-lock-builtin-face)
     (cons wat-mode-font-lock-num-instr-regex      'font-lock-builtin-face)))
   "`wat-mode' highlighting level 3 of 4.
-   
+
     Highlights all core keywords.")
 
 
@@ -118,7 +118,9 @@
   "`wat-mode', an Emacs major mode for editing WebAssembly's text format")
 
 
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.wat\\'" . wat-mode))
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.wast\\'" . wat-mode))
 
 (provide 'wat-mode)

@@ -108,7 +108,7 @@
     map)
   "Keymap for `wat-mode', derived from `lisp-mode'.")
 
-
+;;;###autoload
 (define-derived-mode wat-mode lisp-mode "wat-mode"
   "Major mode for editing WebAssembly's text encoding."
   (use-local-map wat-mode-map)
